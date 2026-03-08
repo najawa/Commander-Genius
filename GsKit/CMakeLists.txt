@@ -119,6 +119,7 @@ else()
     add_subdirectory(widgets)
 
     add_subdirectory(base)
+    add_subdirectory(imgui)
 
 	if(IOS)
 		target_link_libraries(${PROJECT_NAME}
