@@ -17,6 +17,8 @@ if(USE_CRASHHANDLER)
     ADD_DEFINITIONS(-DUSE_CRASHHANDLER)
 endif()
 
+option(USE_IMGUI "Enable Dear ImGui UI" ON)
+
 OPTION(USE_OPENGL "OpenGL support" No)
 
 
@@ -119,7 +121,10 @@ else()
     add_subdirectory(widgets)
 
     add_subdirectory(base)
-    add_subdirectory(imgui)
+    if(USE_IMGUI)
+        add_subdirectory(imgui)
+        ADD_DEFINITIONS(-DUSE_IMGUI)
+    endif()
 
 	if(IOS)
 		target_link_libraries(${PROJECT_NAME}
@@ -131,11 +136,17 @@ else()
 				SDL2
 				SDL2_mixer
 		)
+		if(USE_IMGUI)
+			target_link_libraries(${PROJECT_NAME} PUBLIC GsKit_imgui)
+		endif()
 	else()
 		Target_link_libraries(${PROJECT_NAME} GsKit_base)
 		Target_link_libraries(${PROJECT_NAME} GsKit_fileio)
 		Target_link_libraries(${PROJECT_NAME} GsKit_widgets)
 		Target_link_libraries(${PROJECT_NAME} GsKit_graphics)
+		if(USE_IMGUI)
+			Target_link_libraries(${PROJECT_NAME} GsKit_imgui)
+		endif()
 	ENDIF()
 
 IF(USE_OPENGL)
