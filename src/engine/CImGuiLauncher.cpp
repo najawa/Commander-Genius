@@ -430,7 +430,7 @@ void CImGuiLauncher::renderPreviewPanel()
 
     // Preview image
     const float availWidth = ImGui::GetContentRegionAvail().x;
-    if (game.previewTexture)
+    if (game.previewTexture && game.previewHeight > 0)
     {
         const float aspect = static_cast<float>(game.previewWidth) / game.previewHeight;
         const float dispHeight = availWidth / aspect;
