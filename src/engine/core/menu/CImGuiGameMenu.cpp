@@ -5,6 +5,7 @@
 
 #include <base/GsEventContainer.h>
 #include <base/video/CVideoDriver.h>
+#include <base/audio/Audio.h>
 
 #include "engine/core/mode/Scene.h"
 #include "engine/core/CSettings.h"
@@ -203,12 +204,40 @@ void CImGuiGameMenu::renderVideoSettings()
     endSubScreen();
 }
 
-// Stub implementations for remaining settings screens (Tasks 12-14)
+// ---------------------------------------------------------------------------
+// Task 12: Audio Settings
+// ---------------------------------------------------------------------------
 
 void CImGuiGameMenu::renderAudioSettings()
 {
     beginSubScreen("##AudioSettings", "AUDIO SETTINGS");
-    ImGui::Text("(Coming soon)");
+
+    int soundVol = static_cast<int>(gAudio.getSoundVolume());
+    if (ImGui::SliderInt("Sound Volume", &soundVol, 0, SDL_MIX_MAXVOLUME))
+    {
+        gAudio.setSoundVolume(static_cast<Uint8>(soundVol));
+    }
+
+    int musicVol = static_cast<int>(gAudio.getMusicVolume());
+    if (ImGui::SliderInt("Music Volume", &musicVol, 0, SDL_MIX_MAXVOLUME))
+    {
+        gAudio.setMusicVolume(static_cast<Uint8>(musicVol));
+    }
+
+    ImGui::Spacing();
+
+    int oplAmp = gAudio.getOplAmp();
+    if (ImGui::SliderInt("OPL Amp", &oplAmp, 100, 400))
+    {
+        gAudio.setOplAmp(oplAmp);
+    }
+
+    int pcSpkVol = gAudio.getPCSpeakerVol();
+    if (ImGui::SliderInt("PC Speaker Vol", &pcSpkVol, 0, 100))
+    {
+        gAudio.setPcSpeakerVol(pcSpkVol);
+    }
+
     endSubScreen();
 }
 
