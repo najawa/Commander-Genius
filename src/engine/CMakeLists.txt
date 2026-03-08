@@ -36,6 +36,11 @@ set(HSRC CGameLauncher.h
          gamedownloader.h
          gameselector.h)
 
+if(USE_IMGUI)
+    list(APPEND CXXSRC CImGuiLauncher.cpp)
+    list(APPEND HSRC CImGuiLauncher.h)
+endif()
+
 add_library(engine STATIC ${CXXSRC}
                           ${HSRC}
                           gamelauncher.menu)
