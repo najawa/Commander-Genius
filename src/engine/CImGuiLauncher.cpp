@@ -4,11 +4,124 @@
 #include "CImGuiTheme.h"
 #include "version.h"
 
+#include <base/GsLogging.h>
+#include <base/GsEvent.h>
+#include <base/GsEventContainer.h>
+#include <base/interface/FindFile.h>
+#include <base/interface/StringUtils.h>
+
+#include "fileio/CExeFile.h"
+#include "fileio/KeenFiles.h"
+
+#include "keen/vorticon/VorticonEngine.h"
+#include "keen/galaxy/GalaxyEngine.h"
+#ifdef BUILD_REFKEEN
+#include "keen/dreams/dreamsengine.h"
+#endif // BUILD_REFKEEN
+
+#include <set>
+
 static constexpr float BOTTOM_BAR_HEIGHT = 40.0f;
 static constexpr float GAME_LIST_WIDTH_RATIO = 0.45f;
 static constexpr float PREVIEW_IMAGE_HEIGHT = 200.0f;
 static constexpr float START_BUTTON_HEIGHT = 40.0f;
 static const ImVec4 BLACK_TEXT(0.0f, 0.0f, 0.0f, 1.0f);
+
+// ---- Local game-detection helpers (mirrored from CGameLauncher.cpp) ----
+
+namespace
+{
+
+struct ExecutableListFiller
+{
+    std::set<std::string> list;
+
+    bool operator()(const std::string& filename)
+    {
+        const std::string ext = GetFileExtension(filename);
+        if (stringcaseequal(ext, "exe") ||
+            stringcaseequal(ext, "lua"))
+        {
+            list.insert(stringtolower(filename));
+        }
+        return true;
+    }
+};
+
+bool detectKeenGame(const std::string& curFname, int& ep, bool& isLua)
+{
+    ep = -1;
+    isLua = false;
+
+#ifdef BUILD_REFKEEN
+    // Episode 7 stands for Keen Dreams
+    if (curFname.find("kdreams") != std::string::npos)
+    {
+        ep = 7;
+    }
+#endif // BUILD_REFKEEN
+
+    for (int i = 1; i <= 6; ++i)
+    {
+        std::string keenName = "keen" + itoa(i) + "e.exe";
+        if (curFname.find(keenName) != std::string::npos)
+        {
+            ep = i;
+            break;
+        }
+
+        keenName = "keen" + itoa(i) + ".exe";
+        if (curFname.find(keenName) != std::string::npos)
+        {
+            ep = i;
+            break;
+        }
+
+        keenName = "keen" + itoa(i) + ".lua";
+        if (curFname.find(keenName) != std::string::npos)
+        {
+            ep = i;
+            isLua = true;
+            break;
+        }
+
+        keenName = "k" + itoa(i) + "demo.exe";
+        if (curFname.find(keenName) != std::string::npos)
+        {
+            ep = i;
+            break;
+        }
+    }
+
+    return ep >= 0;
+}
+
+// Extract the last path component for use as a display name
+std::string filterGameName(const std::string& path)
+{
+    std::string text = path;
+    size_t pos = 0;
+
+    for (;;)
+    {
+        pos = text.find('\\');
+        if (pos == std::string::npos)
+        {
+            pos = text.find('/');
+            if (pos == std::string::npos)
+            {
+                break;
+            }
+        }
+        text = text.substr(pos + 1);
+    }
+
+    return text;
+}
+
+} // anonymous namespace
+
+// ---- CImGuiLauncher implementation ----
 
 CImGuiLauncher::CImGuiLauncher()
 {
@@ -17,11 +130,141 @@ CImGuiLauncher::CImGuiLauncher()
 
 void CImGuiLauncher::scanForGames()
 {
-    // TODO Task 7: Wire to existing game scanner
-    // For now, populate test data
     mGames.clear();
-    mGames.push_back({"Commander Keen 1", "games/Keen1", 1, false, "1.33"});
-    mGames.push_back({"Commander Keen 4", "games/Keen4", 4, false, "1.4 EGA"});
+
+    gLogging.ftextOut("ImGui Launcher: Game Autodetection Started<br>");
+
+    // Scan root directory for executables
+    scanDirectory(".");
+
+    // Recursively scan the games directory (depth 2)
+    scanSubDirectories("games", 2);
+
+    if (mGames.empty())
+    {
+        gLogging.ftextOut("ImGui Launcher: No games detected<br>");
+    }
+    else
+    {
+        gLogging.ftextOut("ImGui Launcher: Found %d game(s)<br>",
+                          static_cast<int>(mGames.size()));
+    }
+}
+
+void CImGuiLauncher::scanDirectory(const std::string& path)
+{
+    gLogging.ftextOut("ImGui Launcher: Scanning %s<br>", path.c_str());
+
+    ExecutableListFiller execList;
+    FindFiles(execList, path, false, FM_REG);
+
+    for (const auto& curFname : execList.list)
+    {
+        int ep = -1;
+        bool isLua = false;
+
+        if (!detectKeenGame(curFname, ep, isLua))
+        {
+            continue;
+        }
+
+        gLogging.ftextOut("ImGui Launcher: Keen game detected: %s (ep %d)<br>",
+                          curFname.c_str(), ep);
+
+        CExeFile executable;
+
+        if (isLua)
+        {
+            if (!executable.readMainLuaScript(
+                    static_cast<unsigned int>(ep), path))
+            {
+                continue;
+            }
+        }
+        else
+        {
+            if (!executable.readKeenExeData(
+                    static_cast<unsigned int>(ep), path))
+            {
+                continue;
+            }
+        }
+
+        // Build the version string
+        const int ver = executable.getEXEVersion();
+        std::string verStr;
+        if (ver <= 0)
+        {
+            verStr = "unknown";
+        }
+        else
+        {
+            verStr = "v" + itoa(ver / 100) + "." + itoa(ver % 100);
+        }
+
+        // Build a display name from the directory
+        std::string displayName = filterGameName(path);
+        if (displayName.empty())
+        {
+            displayName = executable.getFileName();
+        }
+
+        ImGuiGameEntry entry;
+        entry.name      = displayName;
+        entry.directory  = path;
+        entry.episode    = ep;
+        entry.isDemo     = executable.isDemo();
+        entry.version    = verStr;
+
+        mGames.push_back(entry);
+    }
+}
+
+void CImGuiLauncher::scanSubDirectories(const std::string& path,
+                                         int maxDepth)
+{
+    std::set<std::string> dirs;
+    FileListAdder fileListAdder;
+    GetFileList(dirs, fileListAdder, path, false, FM_DIR);
+
+    for (const auto& subdir : dirs)
+    {
+        const std::string newPath = JoinPaths(path, subdir);
+
+        scanDirectory(newPath);
+
+        if (maxDepth > 1)
+        {
+            scanSubDirectories(newPath, maxDepth - 1);
+        }
+    }
+}
+
+void CImGuiLauncher::launchSelectedGame()
+{
+    if (!hasSelection())
+    {
+        return;
+    }
+
+    const auto& game = mGames[mSelectedIndex];
+    const int episode = game.episode;
+    const std::string& dir = game.directory;
+
+    if (episode >= 1 && episode <= 3)
+    {
+        gEventManager.add(new StartVorticonEngine(false, episode, dir));
+    }
+    else if (episode >= 4 && episode <= 6)
+    {
+        gEventManager.add(new StartGalaxyEngine(false, episode, dir));
+    }
+#ifdef BUILD_REFKEEN
+    else if (episode == 7)
+    {
+        gEventManager.add(new StartDreamsEngine(false, dir));
+    }
+#endif // BUILD_REFKEEN
 }
 
 bool CImGuiLauncher::render()
@@ -73,6 +316,11 @@ bool CImGuiLauncher::render()
     renderBottomBar();
 
     ImGui::End();
+
+    if (mStartRequested && hasSelection())
+    {
+        launchSelectedGame();
+    }
 
     return mStartRequested;
 }

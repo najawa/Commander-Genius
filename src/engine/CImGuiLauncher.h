@@ -27,6 +27,9 @@ public:
     // Returns true if user selected a game to start
     bool render();
 
+    // Launch the currently selected game via the event manager
+    void launchSelectedGame();
+
     // Get the selected game info after render() returns true
     // Caller must check render() returned true before calling
     const ImGuiGameEntry& getSelectedGame() const { return mGames.at(mSelectedIndex); }
@@ -37,6 +40,10 @@ private:
     void renderGameList();
     void renderPreviewPanel();
     void renderBottomBar();
+
+    // Game scanning helpers
+    void scanDirectory(const std::string& path);
+    void scanSubDirectories(const std::string& path, int maxDepth);
 
     std::vector<ImGuiGameEntry> mGames;
     int mSelectedIndex = -1;
