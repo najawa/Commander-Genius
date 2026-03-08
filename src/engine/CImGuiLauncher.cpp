@@ -134,8 +134,9 @@ void CImGuiLauncher::scanForGames()
 
     gLogging.ftextOut("ImGui Launcher: Game Autodetection Started<br>");
 
-    // Scan root directory for executables
+    // Scan root directory and one level below (matches legacy DEPTH_MAX_ROOT=1)
     scanDirectory(".");
+    scanSubDirectories(".", 1);
 
     // Recursively scan the games directory (depth 2)
     scanSubDirectories("games", 2);
@@ -250,6 +251,22 @@ void CImGuiLauncher::launchSelectedGame()
     const auto& game = mGames[mSelectedIndex];
     const int episode = game.episode;
     const std::string& dir = game.directory;
+
+    // Populate gKeenFiles globals — engine subsystems read from these on start
+    bool ok = gKeenFiles.exeFile.readKeenExeData(episode, dir);
+    if (!ok)
+    {
+        ok = gKeenFiles.exeFile.readMainLuaScript(episode, dir);
+    }
+
+    if (!ok)
+    {
+        gLogging.ftextOut("ImGui Launcher: Failed to load exe data for episode %d in %s<br>",
+                          episode, dir.c_str());
+        return;
+    }
+
+    gKeenFiles.gameDir = dir;
 
     if (episode >= 1 && episode <= 3)
     {
