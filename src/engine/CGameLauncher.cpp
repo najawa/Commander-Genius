@@ -65,7 +65,11 @@ mGameScanner()
 {}
 
 GameLauncher::~GameLauncher()
-{}
+{
+#ifdef USE_IMGUI
+    CImGuiRender::clearCallback();
+#endif
+}
 
 struct ExecutableListFiller
 {

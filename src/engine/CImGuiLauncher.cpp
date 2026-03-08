@@ -4,6 +4,7 @@
 #include "CImGuiTheme.h"
 #include "version.h"
 
+#include <base/GsApp.h>
 #include <base/GsLogging.h>
 #include <base/GsEvent.h>
 #include <base/GsEventContainer.h>
@@ -528,7 +529,7 @@ void CImGuiLauncher::renderBottomBar()
     ImGui::PushStyleColor(ImGuiCol_Button, CImGuiTheme::accentPrimary());
     if (ImGui::SmallButton("Quit"))
     {
-        // TODO: emit GMQuit event
+        gEventManager.add(new GMQuit());
     }
     ImGui::PopStyleColor();
 }

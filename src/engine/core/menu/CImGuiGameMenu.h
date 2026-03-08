@@ -8,7 +8,7 @@
 class CImGuiGameMenu
 {
 public:
-    enum class Screen { MAIN, VIDEO, AUDIO, CONTROLS, GAME_OPTIONS, SAVE, LOAD };
+    enum class Screen { MAIN, VIDEO, AUDIO, CONTROLS, SAVE, LOAD };
 
     void open();
     void close();

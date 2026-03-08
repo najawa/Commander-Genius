@@ -148,7 +148,8 @@ bool CSDLVideo::init()
     gLogging.textOut(FONTCOLORS::GREEN, "Dear ImGui initialized<br>");
 
     CImGuiTheme::apply();
-    CImGuiTheme::loadFont("vfsroot/global/fonts/PressStart2P-Regular.ttf", 16.0f);
+    if (!CImGuiTheme::loadFont("vfsroot/global/fonts/PressStart2P-Regular.ttf", 16.0f))
+        gLogging.textOut(FONTCOLORS::RED, "Warning: Could not load retro font, using ImGui default<br>");
 #endif
 
     resizeDisplayScreen(m_VidConfig.mDisplayRect);

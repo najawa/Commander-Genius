@@ -19,6 +19,9 @@
 
 KeenEngine::~KeenEngine()
 {
+#ifdef USE_IMGUI
+    CImGuiRender::clearCallback();
+#endif
     gMusicPlayer.stop();
 }
 

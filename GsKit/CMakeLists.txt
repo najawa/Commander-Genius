@@ -21,6 +21,9 @@ option(USE_IMGUI "Enable Dear ImGui UI" ON)
 
 OPTION(USE_OPENGL "OpenGL support" No)
 
+if(USE_IMGUI AND USE_OPENGL)
+    message(FATAL_ERROR "USE_IMGUI currently requires the SDL2 renderer (USE_OPENGL=No). Set -DUSE_OPENGL=No or -DUSE_IMGUI=OFF.")
+endif()
 
 if(USE_BOOST)
     set(Boost_USE_STATIC_LIBS OFF)
