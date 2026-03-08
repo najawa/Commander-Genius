@@ -11,6 +11,7 @@ set(IMGUI_SOURCES
     imgui_impl_sdl2.cpp
     imgui_impl_sdlrenderer2.cpp
     CImGuiTheme.cpp
+    CImGuiRender.cpp
 )
 
 add_library(${PROJECT_NAME} STATIC ${IMGUI_SOURCES})

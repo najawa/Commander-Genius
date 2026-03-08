@@ -12,6 +12,10 @@
 #include <base/CInput.h>
 #include <base/video/CVideoDriver.h>
 
+#ifdef USE_IMGUI
+#include "CImGuiRender.h"
+#endif
+
 
 KeenEngine::~KeenEngine()
 {
@@ -94,8 +98,24 @@ void KeenEngine::pumpEvent(const std::shared_ptr<CEvent> &evPtr)
     }
 }
 
+void KeenEngine::render()
+{
+    GameEngine::render();
+
+#ifdef USE_IMGUI
+    CImGuiRender::setCallback([this]() {
+        mImGuiMenu.render();
+    });
+#endif
+}
+
 void KeenEngine::ponder(const float deltaT)
 {
+#ifdef USE_IMGUI
+    if (mImGuiMenu.isOpen())
+        return;  // Pause game logic while menu is open
+#endif
+
     if(gMenuController.active())
         return;
 
@@ -112,10 +132,14 @@ void KeenEngine::ponder(const float deltaT)
     // Did the player press the quit/back button
     if( gInput.getPressedCommand(IC_BACK) )
     {
+#ifdef USE_IMGUI
+        mImGuiMenu.open();
+#else
         if( gMenuController.empty() ) // If no menu is open, open the main menu
         {
             openMainMenu();
         }
+#endif
     }
 }
 

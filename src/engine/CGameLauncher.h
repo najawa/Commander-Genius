@@ -26,6 +26,10 @@
 #include <widgets/GsTextSelectionList.h>
 #include <widgets/GsProgressbar.h>
 
+#ifdef USE_IMGUI
+#include "CImGuiLauncher.h"
+#endif
+
 #include <string>
 #include <vector>
 #include <ostream>
@@ -156,6 +160,10 @@ private:
     bool mDoneExecSelection = false; // Tells if the Patch file has been selected if any
 
     DownloadGui mDownloadGui;
+
+#ifdef USE_IMGUI
+    std::unique_ptr<CImGuiLauncher> mImGuiLauncher;
+#endif
 };
 
 

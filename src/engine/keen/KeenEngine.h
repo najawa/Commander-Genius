@@ -4,6 +4,10 @@
 #include "engine/core/GameEngine.h"
 #include "engine/core/CBehaviorEngine.h"
 
+#ifdef USE_IMGUI
+#include "engine/core/menu/CImGuiGameMenu.h"
+#endif
+
 class KeenEngine : public GameEngine
 {
 public:
@@ -27,6 +31,8 @@ public:
 
     virtual void ponder(const float deltaT) override;
 
+    void render() override;
+
     virtual bool loadResources( const Uint8 flags ) = 0;
 
 protected:
@@ -42,6 +48,10 @@ protected:
 
     const int mEp;
     bool mLockedMenu;
+
+#ifdef USE_IMGUI
+    CImGuiGameMenu mImGuiMenu;
+#endif
 };
 
 // Event pushed when all the resources have been loaded

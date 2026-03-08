@@ -12,6 +12,7 @@
 
 #ifdef USE_IMGUI
 #include "CImGuiTheme.h"
+#include "CImGuiRender.h"
 #endif
 #if defined(__APPLE__)
     #include <TargetConditionals.h>
@@ -433,14 +434,7 @@ void CSDLVideo::transformScreenToDisplay()
     ImGui_ImplSDL2_NewFrame();
     ImGui::NewFrame();
 
-    // Test overlay -- remove after Phase A validation
-    ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_Always);
-    ImGui::Begin("CG Debug", nullptr,
-                 ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize |
-                 ImGuiWindowFlags_NoCollapse);
-    ImGui::Text("Commander Genius + ImGui");
-    ImGui::Text("Frame: %.1f FPS", ImGui::GetIO().Framerate);
-    ImGui::End();
+    CImGuiRender::render();
 
     ImGui::Render();
     ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), renderer);

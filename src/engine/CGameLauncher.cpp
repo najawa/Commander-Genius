@@ -43,13 +43,19 @@
 
 #include "keen/vorticon/VorticonEngine.h"
 #include "keen/galaxy/GalaxyEngine.h"
+#ifdef BUILD_REFKEEN
 #include "keen/dreams/dreamsengine.h"
+#endif // BUILD_REFKEEN
 
 #ifdef BUILD_COSMOS
 #include "cosmos/CosmoEngine.h"
 #endif // BUILD_COSMOS
 
 #include <base/interface/property_tree/xml_parser.h>
+
+#ifdef USE_IMGUI
+#include "CImGuiRender.h"
+#endif
 
 /// Main Class implementation
 GameLauncher::GameLauncher() :
@@ -441,11 +447,13 @@ bool detectKeenGame(const std::string &curFname,
     isLua = false;
 
     {
-        // Episode 1-6 and 7 stands for Keen Dreams
+#ifdef BUILD_REFKEEN
+        // Episode 7 stands for Keen Dreams
         if(curFname.find("kdreams") != curFname.npos)
         {
             ep = 7;
         }
+#endif // BUILD_REFKEEN
 
         for(int i = 1; i <= 6; ++i)
         {
@@ -592,6 +600,10 @@ bool GameLauncher::start()
     // CRC init when Launcher starts.
     crc32_init();
 
+#ifdef USE_IMGUI
+    mImGuiLauncher = std::make_unique<CImGuiLauncher>();
+    return true;
+#else
     SDL_ShowCursor(gVideoDriver.getVidConfig().mShowCursor ? SDL_ENABLE : SDL_DISABLE);
 
     // Make sure we use the right video settings for the launcher
@@ -654,6 +666,7 @@ bool GameLauncher::start()
     mGameScanner.start();
 
     return true;
+#endif // USE_IMGUI
 }
 
 
@@ -965,10 +978,12 @@ void GameLauncher::ponderPatchDialog()
                         {
                             gEventManager.add( new StartGalaxyEngine(false, episode, DataDirectory) );
                         }
+#ifdef BUILD_REFKEEN
                         else if(episode == 7)
                         {
                             gEventManager.add( new StartDreamsEngine(false, DataDirectory) );
                         }
+#endif // BUILD_REFKEEN
                     }
                     else // Everything else cannot be
                     {
@@ -1003,6 +1018,11 @@ void GameLauncher::ponderPatchDialog()
 ////
 void GameLauncher::ponder(const float deltaT)
 {
+#ifdef USE_IMGUI
+    // ImGui launcher handles its own input
+    return;
+#endif
+
 #ifdef DOWNLOADER
     mDownloadGui.ponder(deltaT);
 
@@ -1115,6 +1135,16 @@ void GameLauncher::renderMouseTouchState()
 
 void GameLauncher::render()
 {
+#ifdef USE_IMGUI
+    CImGuiRender::setCallback([this]() {
+        if (mImGuiLauncher)
+        {
+            mImGuiLauncher->render();
+        }
+    });
+    return;
+#endif
+
 #ifdef DOWNLOADER
     if(mDownloadGui.isOpen())
     {
