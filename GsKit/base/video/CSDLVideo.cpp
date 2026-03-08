@@ -9,6 +9,10 @@
 #include "CVideoEngine.h"
 #include <base/GsLogging.h>
 #include <base/GsApp.h>
+
+#ifdef USE_IMGUI
+#include "CImGuiTheme.h"
+#endif
 #if defined(__APPLE__)
     #include <TargetConditionals.h>
 #else
@@ -141,6 +145,9 @@ bool CSDLVideo::init()
     ImGui_ImplSDLRenderer2_Init(renderer);
 
     gLogging.textOut(FONTCOLORS::GREEN, "Dear ImGui initialized<br>");
+
+    CImGuiTheme::apply();
+    CImGuiTheme::loadFont("vfsroot/global/fonts/PressStart2P-Regular.ttf", 16.0f);
 #endif
 
     resizeDisplayScreen(m_VidConfig.mDisplayRect);
