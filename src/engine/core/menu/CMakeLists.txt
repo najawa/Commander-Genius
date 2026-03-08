@@ -49,6 +49,10 @@ set(SRCS
     achievementmenu.h
 )
 
+if(USE_IMGUI)
+    list(APPEND SRCS CImGuiGameMenu.cpp CImGuiGameMenu.h)
+endif()
+
 add_library(engine_core_menu STATIC ${SRCS})
 
 target_compile_features(engine_core_menu PRIVATE cxx_std_17)
