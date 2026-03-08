@@ -4,8 +4,14 @@
 #include "imgui.h"
 #include <vector>
 #include <string>
+#include <memory>
+
+#ifdef DOWNLOADER
+#include "gamedownloader.h"
+#endif
 
 struct SDL_Texture;
+struct ThreadPoolItem;
 
 struct ImGuiGameEntry
 {
@@ -56,6 +62,24 @@ private:
     std::vector<ImGuiGameEntry> mGames;
     int mSelectedIndex = -1;
     bool mStartRequested = false;
+
+#ifdef DOWNLOADER
+    // Download manager state
+    void renderDownloadModal();
+    void startCatalogueLoad();
+    void startGameDownload(int catalogueIndex);
+
+    std::vector<GameCatalogueEntry> mCatalogueEntries;
+    bool mShowDownloadModal = false;
+    bool mCatalogueLoaded = false;
+    bool mCatalogueLoading = false;
+    int mDownloadProgress = 0;
+    int mDownloadErrorCode = 0;
+    bool mCancelDownload = false;
+    bool mDownloading = false;
+    int mDownloadingIndex = -1;
+    std::shared_ptr<ThreadPoolItem> mDownloadThread;
+#endif
 };
 
 #endif // USE_IMGUI

@@ -21,6 +21,11 @@
 #include "keen/dreams/dreamsengine.h"
 #endif // BUILD_REFKEEN
 
+#ifdef DOWNLOADER
+#include "gamedownloader.h"
+#include <base/interface/ThreadPool.h>
+#endif
+
 #include <set>
 
 static constexpr float BOTTOM_BAR_HEIGHT = 40.0f;
@@ -376,6 +381,28 @@ bool CImGuiLauncher::render()
     // Bottom bar
     renderBottomBar();
 
+#ifdef DOWNLOADER
+    // Check if download completed
+    if (mDownloading && mDownloadThread)
+    {
+        if (gThreadPool->finalizeIfReady(mDownloadThread))
+        {
+            mDownloading = false;
+            mDownloadThread.reset();
+            if (mDownloadErrorCode == 0)
+            {
+                // Rescan for newly downloaded games
+                scanForGames();
+            }
+        }
+    }
+
+    if (mShowDownloadModal)
+    {
+        renderDownloadModal();
+    }
+#endif
+
     ImGui::End();
 
     if (mStartRequested && hasSelection())
@@ -486,6 +513,18 @@ void CImGuiLauncher::renderBottomBar()
     ImGui::SameLine(ImGui::GetWindowWidth() - quitWidth - ImGui::GetStyle().WindowPadding.x);
     ImGui::PopStyleColor();
 
+#ifdef DOWNLOADER
+    if (ImGui::SmallButton("+ Download"))
+    {
+        mShowDownloadModal = true;
+        if (!mCatalogueLoaded && !mCatalogueLoading)
+        {
+            startCatalogueLoad();
+        }
+    }
+    ImGui::SameLine();
+#endif
+
     ImGui::PushStyleColor(ImGuiCol_Button, CImGuiTheme::accentPrimary());
     if (ImGui::SmallButton("Quit"))
     {
@@ -493,5 +532,143 @@ void CImGuiLauncher::renderBottomBar()
     }
     ImGui::PopStyleColor();
 }
+
+#ifdef DOWNLOADER
+
+void CImGuiLauncher::startCatalogueLoad()
+{
+    mCatalogueLoading = true;
+    GameDownloader downloader(mDownloadProgress, mDownloadErrorCode, mCancelDownload);
+
+    std::vector<std::string> missingList;
+    downloader.checkForMissingGames(missingList);
+
+    if (downloader.hasCatalog())
+    {
+        mCatalogueEntries = downloader.getGameCatalogue();
+        mCatalogueLoaded = true;
+    }
+
+    mCatalogueLoading = false;
+}
+
+void CImGuiLauncher::renderDownloadModal()
+{
+    ImGui::OpenPopup("Download Games");
+
+    const ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+    ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+    ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiCond_Appearing);
+
+    if (ImGui::BeginPopupModal("Download Games", &mShowDownloadModal,
+                                ImGuiWindowFlags_NoResize))
+    {
+        if (mCatalogueLoading)
+        {
+            ImGui::Text("Loading catalogue...");
+        }
+        else if (!mCatalogueLoaded || mCatalogueEntries.empty())
+        {
+            ImGui::Text("No downloadable games found.");
+            ImGui::Text("Catalogue file may be missing.");
+        }
+        else
+        {
+            ImGui::Text("Available Games:");
+            ImGui::Separator();
+
+            ImGui::BeginChild("##GameCatalogue", ImVec2(0, -60),
+                              ImGuiChildFlags_Borders);
+            for (int i = 0; i < static_cast<int>(mCatalogueEntries.size()); i++)
+            {
+                const auto& entry = mCatalogueEntries[i];
+                const bool isDownloading = (mDownloading && mDownloadingIndex == i);
+
+                if (ImGui::Selectable(entry.mName.c_str(), false))
+                {
+                    if (!mDownloading)
+                    {
+                        startGameDownload(i);
+                    }
+                }
+
+                if (!entry.mDescription.empty())
+                {
+                    ImGui::SameLine();
+                    ImGui::PushStyleColor(ImGuiCol_Text, CImGuiTheme::textDimmed());
+                    ImGui::Text("- %s", entry.mDescription.c_str());
+                    ImGui::PopStyleColor();
+                }
+
+                if (isDownloading)
+                {
+                    ImGui::SameLine();
+                    ImGui::PushStyleColor(ImGuiCol_Text,
+                                          CImGuiTheme::accentSecondary());
+                    ImGui::Text("Downloading...");
+                    ImGui::PopStyleColor();
+                }
+            }
+            ImGui::EndChild();
+
+            // Progress bar
+            if (mDownloading)
+            {
+                const float progress = mDownloadProgress / 1000.0f;
+                ImGui::ProgressBar(progress, ImVec2(-1, 0));
+
+                if (ImGui::Button("Cancel"))
+                {
+                    mCancelDownload = true;
+                }
+            }
+            else if (mDownloadErrorCode != 0)
+            {
+                ImGui::PushStyleColor(ImGuiCol_Text, CImGuiTheme::accentPrimary());
+                ImGui::Text("Download failed (error %d)", mDownloadErrorCode);
+                ImGui::PopStyleColor();
+            }
+        }
+
+        ImGui::Separator();
+        if (ImGui::Button("Close", ImVec2(-1, 0)))
+        {
+            if (mDownloading)
+            {
+                mCancelDownload = true;
+            }
+            mShowDownloadModal = false;
+            ImGui::CloseCurrentPopup();
+        }
+
+        ImGui::EndPopup();
+    }
+}
+
+void CImGuiLauncher::startGameDownload(int catalogueIndex)
+{
+    if (mDownloading || catalogueIndex < 0 ||
+        catalogueIndex >= static_cast<int>(mCatalogueEntries.size()))
+    {
+        return;
+    }
+
+    const auto& entry = mCatalogueEntries[catalogueIndex];
+    mDownloading = true;
+    mDownloadingIndex = catalogueIndex;
+    mDownloadProgress = 0;
+    mDownloadErrorCode = 0;
+    mCancelDownload = false;
+
+    const auto& gameFileName = entry.mLink;
+    const auto& gameName = entry.mName;
+
+    mDownloadThread = gThreadPool->start(
+        new GameDownloader(mDownloadProgress, mDownloadErrorCode, mCancelDownload,
+                           gameFileName, gameName),
+        "ImGui game download");
+}
+
+#endif // DOWNLOADER
 
 #endif // USE_IMGUI
