@@ -9,6 +9,8 @@
 #include <base/GsEventContainer.h>
 #include <base/interface/FindFile.h>
 #include <base/interface/StringUtils.h>
+#include <base/video/CVideoDriver.h>
+#include <SDL.h>
 
 #include "fileio/CExeFile.h"
 #include "fileio/KeenFiles.h"
@@ -128,6 +130,18 @@ CImGuiLauncher::CImGuiLauncher()
     scanForGames();
 }
 
+CImGuiLauncher::~CImGuiLauncher()
+{
+    for (auto& game : mGames)
+    {
+        if (game.previewTexture)
+        {
+            SDL_DestroyTexture(game.previewTexture);
+            game.previewTexture = nullptr;
+        }
+    }
+}
+
 void CImGuiLauncher::scanForGames()
 {
     mGames.clear();
@@ -239,6 +253,36 @@ void CImGuiLauncher::scanSubDirectories(const std::string& path,
             scanSubDirectories(newPath, maxDepth - 1);
         }
     }
+}
+
+void CImGuiLauncher::loadPreview(int index)
+{
+    if (index < 0 || index >= static_cast<int>(mGames.size()))
+        return;
+
+    auto& game = mGames[index];
+    if (game.previewTexture)
+        return; // already loaded
+
+    // Try to find preview.bmp in the game directory
+    const std::string previewPath = JoinPaths(game.directory, "preview.bmp");
+    const std::string fullPath = GetFullFileName(previewPath);
+
+    SDL_Surface* surface = SDL_LoadBMP(fullPath.c_str());
+    if (!surface)
+        return;
+
+    SDL_Renderer* renderer = gVideoDriver.Renderer();
+    if (!renderer)
+    {
+        SDL_FreeSurface(surface);
+        return;
+    }
+
+    game.previewTexture = SDL_CreateTextureFromSurface(renderer, surface);
+    game.previewWidth = surface->w;
+    game.previewHeight = surface->h;
+    SDL_FreeSurface(surface);
 }
 
 void CImGuiLauncher::launchSelectedGame()
@@ -358,6 +402,7 @@ void CImGuiLauncher::renderGameList()
                               ImGuiSelectableFlags_AllowDoubleClick))
         {
             mSelectedIndex = i;
+            loadPreview(i);
             if (ImGui::IsMouseDoubleClicked(0))
             {
                 mStartRequested = true;
@@ -383,15 +428,27 @@ void CImGuiLauncher::renderPreviewPanel()
 
     const auto& game = mGames[mSelectedIndex];
 
-    // Preview image placeholder
-    const ImVec2 previewSize(ImGui::GetContentRegionAvail().x, PREVIEW_IMAGE_HEIGHT);
-    ImGui::PushStyleColor(ImGuiCol_ChildBg, CImGuiTheme::darkBg());
-    if (ImGui::BeginChild("##PreviewImg", previewSize, ImGuiChildFlags_Borders))
+    // Preview image
+    const float availWidth = ImGui::GetContentRegionAvail().x;
+    if (game.previewTexture)
     {
-        ImGui::Text("[ Preview Image ]");
+        const float aspect = static_cast<float>(game.previewWidth) / game.previewHeight;
+        const float dispHeight = availWidth / aspect;
+        ImGui::Image(reinterpret_cast<ImTextureID>(game.previewTexture),
+                     ImVec2(availWidth, dispHeight));
     }
-    ImGui::EndChild();
-    ImGui::PopStyleColor();
+    else
+    {
+        // Fallback placeholder
+        const ImVec2 previewSize(availWidth, PREVIEW_IMAGE_HEIGHT);
+        ImGui::PushStyleColor(ImGuiCol_ChildBg, CImGuiTheme::darkBg());
+        if (ImGui::BeginChild("##PreviewImg", previewSize, ImGuiChildFlags_Borders))
+        {
+            ImGui::Text("[ No Preview Available ]");
+        }
+        ImGui::EndChild();
+        ImGui::PopStyleColor();
+    }
 
     ImGui::Spacing();
 

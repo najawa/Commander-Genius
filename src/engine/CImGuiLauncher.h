@@ -5,6 +5,8 @@
 #include <vector>
 #include <string>
 
+struct SDL_Texture;
+
 struct ImGuiGameEntry
 {
     std::string name;
@@ -12,13 +14,16 @@ struct ImGuiGameEntry
     int episode = 0;
     bool isDemo = false;
     std::string version;
-    // Preview texture loaded later
+    SDL_Texture* previewTexture = nullptr;
+    int previewWidth = 0;
+    int previewHeight = 0;
 };
 
 class CImGuiLauncher
 {
 public:
     CImGuiLauncher();
+    ~CImGuiLauncher();
 
     // Scan for games in the search paths
     void scanForGames();
@@ -44,6 +49,9 @@ private:
     // Game scanning helpers
     void scanDirectory(const std::string& path);
     void scanSubDirectories(const std::string& path, int maxDepth);
+
+    // Load preview image for a game entry
+    void loadPreview(int index);
 
     std::vector<ImGuiGameEntry> mGames;
     int mSelectedIndex = -1;
