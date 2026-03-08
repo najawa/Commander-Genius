@@ -2,6 +2,7 @@
 #ifdef USE_IMGUI
 
 #include "imgui.h"
+#include <array>
 #include <string>
 
 class CImGuiGameMenu
@@ -24,12 +25,19 @@ private:
     void renderSaveGame();
     void renderLoadGame();
 
-    // Helper: renders a centered sub-screen window header and returns true if window is open
+    // Helper: renders a centered sub-screen window header
     bool beginSubScreen(const char* id, const char* title, float width = 400.0f);
     void endSubScreen();
 
     bool mIsOpen = false;
     Screen mCurrentScreen = Screen::MAIN;
+
+    // Save game state
+    int mSelectedSaveSlot = -1;
+    std::array<char, 64> mSaveNameBuf = {};
+
+    // Load game state
+    int mSelectedLoadSlot = -1;
 };
 
 #endif // USE_IMGUI

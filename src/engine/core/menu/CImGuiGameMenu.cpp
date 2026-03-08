@@ -10,6 +10,11 @@
 
 #include "engine/core/mode/Scene.h"
 #include "engine/core/CSettings.h"
+#include "engine/core/CBehaviorEngine.h"
+#include "fileio/CSaveGameController.h"
+
+#include <cstring>
+#include <vector>
 
 void CImGuiGameMenu::open()
 {
@@ -302,17 +307,144 @@ void CImGuiGameMenu::renderControlsSettings()
     endSubScreen();
 }
 
+// ---------------------------------------------------------------------------
+// Task 14: Save Game
+// ---------------------------------------------------------------------------
+
 void CImGuiGameMenu::renderSaveGame()
 {
     beginSubScreen("##SaveGame", "SAVE GAME");
-    ImGui::Text("(Coming soon)");
+
+    std::vector<std::string> slotList;
+    gSaveGameController.readSlotList(slotList);
+
+    const int maxSlots = gSaveGameController.getMaxNumofSaveSlots();
+
+    for (int i = 0; i < maxSlots; i++)
+    {
+        const bool hasData = (i < static_cast<int>(slotList.size()) && !slotList[i].empty());
+        const std::string label = hasData ? slotList[i] : "(empty)";
+
+        const bool isSelected = (mSelectedSaveSlot == i);
+        if (ImGui::Selectable(("##save_slot_" + std::to_string(i)).c_str(), isSelected,
+                              0, ImVec2(0, 0)))
+        {
+            mSelectedSaveSlot = i;
+            std::memset(mSaveNameBuf.data(), 0, mSaveNameBuf.size());
+            if (hasData)
+            {
+                const auto copyLen = std::min(label.size(), mSaveNameBuf.size() - 1);
+                std::memcpy(mSaveNameBuf.data(), label.c_str(), copyLen);
+            }
+        }
+        ImGui::SameLine();
+        ImGui::Text("Slot %d: %s", i + 1, label.c_str());
+    }
+
+    ImGui::Spacing();
+    ImGui::Separator();
+    ImGui::Spacing();
+
+    if (mSelectedSaveSlot >= 0)
+    {
+        ImGui::Text("Save to Slot %d:", mSelectedSaveSlot + 1);
+        ImGui::SetNextItemWidth(-1);
+        ImGui::InputText("##SaveName", mSaveNameBuf.data(), mSaveNameBuf.size());
+
+        ImGui::Spacing();
+
+        ImGui::PushStyleColor(ImGuiCol_Button, CImGuiTheme::accentSecondary());
+        if (ImGui::Button("Save", ImVec2(-1, 0)))
+        {
+            const std::string saveName(mSaveNameBuf.data());
+            // Save slots are 1-indexed in the engine
+            gSaveGameController.prepareSaveGame(mSelectedSaveSlot + 1,
+                                                saveName.empty() ? "Quick Save" : saveName);
+            gBehaviorEngine.setPause(false);
+            close();
+        }
+        ImGui::PopStyleColor();
+    }
+    else
+    {
+        ImGui::PushStyleColor(ImGuiCol_Text, CImGuiTheme::textDimmed());
+        ImGui::Text("Select a slot to save.");
+        ImGui::PopStyleColor();
+    }
+
     endSubScreen();
 }
+
+// ---------------------------------------------------------------------------
+// Task 14: Load Game
+// ---------------------------------------------------------------------------
 
 void CImGuiGameMenu::renderLoadGame()
 {
     beginSubScreen("##LoadGame", "LOAD GAME");
-    ImGui::Text("(Coming soon)");
+
+    std::vector<std::string> slotList;
+    gSaveGameController.readSlotList(slotList);
+
+    const int maxSlots = gSaveGameController.getMaxNumofSaveSlots();
+    bool anySlotOccupied = false;
+
+    for (int i = 0; i < maxSlots; i++)
+    {
+        const bool hasData = (i < static_cast<int>(slotList.size()) && !slotList[i].empty());
+        if (hasData)
+            anySlotOccupied = true;
+
+        const std::string label = hasData ? slotList[i] : "(empty)";
+
+        const bool isSelected = (mSelectedLoadSlot == i);
+
+        ImGuiSelectableFlags flags = hasData ? 0 : ImGuiSelectableFlags_Disabled;
+        if (ImGui::Selectable(("##load_slot_" + std::to_string(i)).c_str(), isSelected,
+                              flags, ImVec2(0, 0)))
+        {
+            mSelectedLoadSlot = i;
+        }
+        ImGui::SameLine();
+        if (!hasData)
+            ImGui::PushStyleColor(ImGuiCol_Text, CImGuiTheme::textDimmed());
+        ImGui::Text("Slot %d: %s", i + 1, label.c_str());
+        if (!hasData)
+            ImGui::PopStyleColor();
+    }
+
+    ImGui::Spacing();
+    ImGui::Separator();
+    ImGui::Spacing();
+
+    const bool canLoad = (mSelectedLoadSlot >= 0 &&
+                          mSelectedLoadSlot < static_cast<int>(slotList.size()) &&
+                          !slotList[mSelectedLoadSlot].empty());
+
+    if (canLoad)
+    {
+        ImGui::PushStyleColor(ImGuiCol_Button, CImGuiTheme::accentSecondary());
+        if (ImGui::Button("Load", ImVec2(-1, 0)))
+        {
+            gSaveGameController.prepareLoadGame(mSelectedLoadSlot + 1);
+            gBehaviorEngine.setPause(false);
+            close();
+        }
+        ImGui::PopStyleColor();
+    }
+    else if (!anySlotOccupied)
+    {
+        ImGui::PushStyleColor(ImGuiCol_Text, CImGuiTheme::textDimmed());
+        ImGui::Text("No saved games found.");
+        ImGui::PopStyleColor();
+    }
+    else
+    {
+        ImGui::PushStyleColor(ImGuiCol_Text, CImGuiTheme::textDimmed());
+        ImGui::Text("Select a slot to load.");
+        ImGui::PopStyleColor();
+    }
+
     endSubScreen();
 }
 
