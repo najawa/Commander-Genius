@@ -4,8 +4,10 @@
 #include "CImGuiTheme.h"
 
 #include <base/GsEventContainer.h>
+#include <base/video/CVideoDriver.h>
 
 #include "engine/core/mode/Scene.h"
+#include "engine/core/CSettings.h"
 
 void CImGuiGameMenu::open()
 {
@@ -46,6 +48,37 @@ void CImGuiGameMenu::render()
         case Screen::LOAD:     renderLoadGame();          break;
         default:               renderMainMenu();          break;
     }
+}
+
+bool CImGuiGameMenu::beginSubScreen(const char* id, const char* title, float width)
+{
+    const ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+    ImGui::SetNextWindowPos(center, ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+    ImGui::SetNextWindowSize(ImVec2(width, 0));
+
+    ImGui::Begin(id, nullptr,
+                 ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
+                 ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize);
+
+    ImGui::PushStyleColor(ImGuiCol_Text, CImGuiTheme::accentPrimary());
+    const float titleWidth = ImGui::CalcTextSize(title).x;
+    ImGui::SetCursorPosX((width - titleWidth) / 2.0f);
+    ImGui::Text("%s", title);
+    ImGui::PopStyleColor();
+
+    ImGui::Separator();
+    ImGui::Spacing();
+
+    return true;
+}
+
+void CImGuiGameMenu::endSubScreen()
+{
+    ImGui::Spacing();
+    if (ImGui::Button("Back", ImVec2(-1, 0)))
+        mCurrentScreen = Screen::MAIN;
+
+    ImGui::End();
 }
 
 void CImGuiGameMenu::renderMainMenu()
@@ -102,126 +135,102 @@ void CImGuiGameMenu::renderMainMenu()
     ImGui::End();
 }
 
-// Stub implementations for settings screens (Tasks 11-14 will fill these in)
+// ---------------------------------------------------------------------------
+// Task 11: Video Settings
+// ---------------------------------------------------------------------------
 
 void CImGuiGameMenu::renderVideoSettings()
 {
-    const ImVec2 center = ImGui::GetMainViewport()->GetCenter();
-    ImGui::SetNextWindowPos(center, ImGuiCond_Always, ImVec2(0.5f, 0.5f));
-    ImGui::SetNextWindowSize(ImVec2(400, 0));
+    beginSubScreen("##VideoSettings", "VIDEO SETTINGS");
 
-    ImGui::Begin("##VideoSettings", nullptr,
-                 ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
-                 ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize);
+    CVidConfig vidConf = gVideoDriver.getVidConfig();
 
-    ImGui::PushStyleColor(ImGuiCol_Text, CImGuiTheme::accentPrimary());
-    ImGui::Text("VIDEO SETTINGS");
-    ImGui::PopStyleColor();
-    ImGui::Separator();
+    bool fullscreen = vidConf.mFullscreen;
+    if (ImGui::Checkbox("Fullscreen", &fullscreen))
+    {
+        const CVidConfig oldConf = gVideoDriver.getVidConfig();
+        CVidConfig newConf = oldConf;
+        newConf.mFullscreen = fullscreen;
+        gVideoDriver.setVidConfig(newConf);
+        if (!gVideoDriver.applyMode())
+            gVideoDriver.setVidConfig(oldConf);
+        else
+            gVideoDriver.start();
+    }
 
-    ImGui::Text("(Coming soon)");
-    ImGui::Spacing();
+    bool vsync = vidConf.mVSync;
+    if (ImGui::Checkbox("VSync", &vsync))
+    {
+        const CVidConfig oldConf = gVideoDriver.getVidConfig();
+        CVidConfig newConf = oldConf;
+        newConf.mVSync = vsync;
+        gVideoDriver.setVidConfig(newConf);
+        if (!gVideoDriver.applyMode())
+            gVideoDriver.setVidConfig(oldConf);
+        else
+            gVideoDriver.start();
+    }
 
-    if (ImGui::Button("Back", ImVec2(-1, 0)))
-        mCurrentScreen = Screen::MAIN;
+    bool integerScaling = vidConf.mIntegerScaling;
+    if (ImGui::Checkbox("Integer Scaling", &integerScaling))
+    {
+        const CVidConfig oldConf = gVideoDriver.getVidConfig();
+        CVidConfig newConf = oldConf;
+        newConf.mIntegerScaling = integerScaling;
+        gVideoDriver.setVidConfig(newConf);
+        if (!gVideoDriver.applyMode())
+            gVideoDriver.setVidConfig(oldConf);
+        else
+            gVideoDriver.start();
+    }
 
-    ImGui::End();
+    const char* qualityItems[] = { "Nearest", "Linear" };
+    int currentQuality = (vidConf.mRenderScQuality == CVidConfig::RenderQuality::LINEAR) ? 1 : 0;
+    if (ImGui::Combo("Render Quality", &currentQuality, qualityItems, 2))
+    {
+        const CVidConfig oldConf = gVideoDriver.getVidConfig();
+        CVidConfig newConf = oldConf;
+        newConf.mRenderScQuality = (currentQuality == 1)
+            ? CVidConfig::RenderQuality::LINEAR
+            : CVidConfig::RenderQuality::NEAREST;
+        gVideoDriver.setVidConfig(newConf);
+        if (!gVideoDriver.applyMode())
+            gVideoDriver.setVidConfig(oldConf);
+        else
+            gVideoDriver.start();
+    }
+
+    endSubScreen();
 }
+
+// Stub implementations for remaining settings screens (Tasks 12-14)
 
 void CImGuiGameMenu::renderAudioSettings()
 {
-    const ImVec2 center = ImGui::GetMainViewport()->GetCenter();
-    ImGui::SetNextWindowPos(center, ImGuiCond_Always, ImVec2(0.5f, 0.5f));
-    ImGui::SetNextWindowSize(ImVec2(400, 0));
-
-    ImGui::Begin("##AudioSettings", nullptr,
-                 ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
-                 ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize);
-
-    ImGui::PushStyleColor(ImGuiCol_Text, CImGuiTheme::accentPrimary());
-    ImGui::Text("AUDIO SETTINGS");
-    ImGui::PopStyleColor();
-    ImGui::Separator();
-
+    beginSubScreen("##AudioSettings", "AUDIO SETTINGS");
     ImGui::Text("(Coming soon)");
-    ImGui::Spacing();
-
-    if (ImGui::Button("Back", ImVec2(-1, 0)))
-        mCurrentScreen = Screen::MAIN;
-
-    ImGui::End();
+    endSubScreen();
 }
 
 void CImGuiGameMenu::renderControlsSettings()
 {
-    const ImVec2 center = ImGui::GetMainViewport()->GetCenter();
-    ImGui::SetNextWindowPos(center, ImGuiCond_Always, ImVec2(0.5f, 0.5f));
-    ImGui::SetNextWindowSize(ImVec2(400, 0));
-
-    ImGui::Begin("##ControlsSettings", nullptr,
-                 ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
-                 ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize);
-
-    ImGui::PushStyleColor(ImGuiCol_Text, CImGuiTheme::accentPrimary());
-    ImGui::Text("CONTROLS");
-    ImGui::PopStyleColor();
-    ImGui::Separator();
-
+    beginSubScreen("##ControlsSettings", "CONTROLS");
     ImGui::Text("(Coming soon)");
-    ImGui::Spacing();
-
-    if (ImGui::Button("Back", ImVec2(-1, 0)))
-        mCurrentScreen = Screen::MAIN;
-
-    ImGui::End();
+    endSubScreen();
 }
 
 void CImGuiGameMenu::renderSaveGame()
 {
-    const ImVec2 center = ImGui::GetMainViewport()->GetCenter();
-    ImGui::SetNextWindowPos(center, ImGuiCond_Always, ImVec2(0.5f, 0.5f));
-    ImGui::SetNextWindowSize(ImVec2(400, 0));
-
-    ImGui::Begin("##SaveGame", nullptr,
-                 ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
-                 ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize);
-
-    ImGui::PushStyleColor(ImGuiCol_Text, CImGuiTheme::accentPrimary());
-    ImGui::Text("SAVE GAME");
-    ImGui::PopStyleColor();
-    ImGui::Separator();
-
+    beginSubScreen("##SaveGame", "SAVE GAME");
     ImGui::Text("(Coming soon)");
-    ImGui::Spacing();
-
-    if (ImGui::Button("Back", ImVec2(-1, 0)))
-        mCurrentScreen = Screen::MAIN;
-
-    ImGui::End();
+    endSubScreen();
 }
 
 void CImGuiGameMenu::renderLoadGame()
 {
-    const ImVec2 center = ImGui::GetMainViewport()->GetCenter();
-    ImGui::SetNextWindowPos(center, ImGuiCond_Always, ImVec2(0.5f, 0.5f));
-    ImGui::SetNextWindowSize(ImVec2(400, 0));
-
-    ImGui::Begin("##LoadGame", nullptr,
-                 ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
-                 ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize);
-
-    ImGui::PushStyleColor(ImGuiCol_Text, CImGuiTheme::accentPrimary());
-    ImGui::Text("LOAD GAME");
-    ImGui::PopStyleColor();
-    ImGui::Separator();
-
+    beginSubScreen("##LoadGame", "LOAD GAME");
     ImGui::Text("(Coming soon)");
-    ImGui::Spacing();
-
-    if (ImGui::Button("Back", ImVec2(-1, 0)))
-        mCurrentScreen = Screen::MAIN;
-
-    ImGui::End();
+    endSubScreen();
 }
 
 #endif // USE_IMGUI

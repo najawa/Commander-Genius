@@ -24,6 +24,10 @@ private:
     void renderSaveGame();
     void renderLoadGame();
 
+    // Helper: renders a centered sub-screen window header and returns true if window is open
+    bool beginSubScreen(const char* id, const char* title, float width = 400.0f);
+    void endSubScreen();
+
     bool mIsOpen = false;
     Screen mCurrentScreen = Screen::MAIN;
 };
