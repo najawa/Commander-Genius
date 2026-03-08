@@ -6,6 +6,7 @@
 #include <base/GsEventContainer.h>
 #include <base/video/CVideoDriver.h>
 #include <base/audio/Audio.h>
+#include <base/CInput.h>
 
 #include "engine/core/mode/Scene.h"
 #include "engine/core/CSettings.h"
@@ -241,10 +242,63 @@ void CImGuiGameMenu::renderAudioSettings()
     endSubScreen();
 }
 
+// ---------------------------------------------------------------------------
+// Task 13: Controls Settings (read-only key binding table)
+// ---------------------------------------------------------------------------
+
 void CImGuiGameMenu::renderControlsSettings()
 {
-    beginSubScreen("##ControlsSettings", "CONTROLS");
-    ImGui::Text("(Coming soon)");
+    beginSubScreen("##ControlsSettings", "CONTROLS", 450.0f);
+
+    struct ControlEntry
+    {
+        const char* label;
+        InpCmd command;
+    };
+
+    static constexpr ControlEntry kEntries[] = {
+        { "Left",       IC_LEFT      },
+        { "Right",      IC_RIGHT     },
+        { "Up",         IC_UP        },
+        { "Down",       IC_DOWN      },
+        { "Jump",       IC_JUMP      },
+        { "Pogo",       IC_POGO      },
+        { "Fire",       IC_FIRE      },
+        { "Run",        IC_RUN       },
+        { "Status",     IC_STATUS    },
+        { "Cam/Revive", IC_CAMLEAD   },
+        { "Help",       IC_HELP      },
+        { "Back",       IC_BACK      },
+        { "Quicksave",  IC_QUICKSAVE },
+        { "Quickload",  IC_QUICKLOAD },
+    };
+
+    if (ImGui::BeginTable("##KeyBindings", 2,
+                          ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg))
+    {
+        ImGui::TableSetupColumn("Action", ImGuiTableColumnFlags_WidthFixed, 120.0f);
+        ImGui::TableSetupColumn("Key", ImGuiTableColumnFlags_WidthStretch);
+        ImGui::TableHeadersRow();
+
+        for (const auto& entry : kEntries)
+        {
+            ImGui::TableNextRow();
+            ImGui::TableSetColumnIndex(0);
+            ImGui::TextUnformatted(entry.label);
+            ImGui::TableSetColumnIndex(1);
+            const std::string keyName =
+                gInput.getEventShortName(entry.command, 0);
+            ImGui::TextUnformatted(keyName.c_str());
+        }
+
+        ImGui::EndTable();
+    }
+
+    ImGui::Spacing();
+    ImGui::PushStyleColor(ImGuiCol_Text, CImGuiTheme::textDimmed());
+    ImGui::TextWrapped("Key rebinding coming in a future update.");
+    ImGui::PopStyleColor();
+
     endSubScreen();
 }
 
