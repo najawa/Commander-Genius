@@ -17,6 +17,9 @@
 
 #include "fileio/CConfiguration.h"
 
+#ifdef USE_IMGUI
+#include "imgui_impl_sdl2.h"
+#endif
 
 #if defined(CAANOO) || defined(WIZ) || defined(GP2X)
 #include "sys/wizgp2x.h"
@@ -655,6 +658,10 @@ void CInput::readNewEvent()
 
     while( SDL_PollEvent( &Event ) )
     {
+#ifdef USE_IMGUI
+        ImGui_ImplSDL2_ProcessEvent(&Event);
+#endif
+
         switch ( Event.type )
         {
             case SDL_QUIT:
@@ -950,6 +957,10 @@ void CInput::pollEvents()
     // While there's an event to handle
     while( SDL_PollEvent( &Event ) )
     {
+#ifdef USE_IMGUI
+        ImGui_ImplSDL2_ProcessEvent(&Event);
+#endif
+
         bool passSDLEventVec = true;
 
         switch( Event.type )
