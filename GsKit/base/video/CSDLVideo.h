@@ -13,10 +13,17 @@
 #include <base/video/CVideoEngine.h>
 #include <graphics/GsSurface.h>
 
+#ifdef USE_IMGUI
+#include "imgui.h"
+#include "imgui_impl_sdl2.h"
+#include "imgui_impl_sdlrenderer2.h"
+#endif
+
 class CSDLVideo : public CVideoEngine
 {
 public:
 	CSDLVideo(const CVidConfig& VidConfig);
+    ~CSDLVideo() override;
 
     bool init();
 

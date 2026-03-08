@@ -25,6 +25,15 @@ CSDLVideo::CSDLVideo(const CVidConfig& VidConfig) :
 CVideoEngine(VidConfig)
 {}
 
+CSDLVideo::~CSDLVideo()
+{
+#ifdef USE_IMGUI
+    ImGui_ImplSDLRenderer2_Shutdown();
+    ImGui_ImplSDL2_Shutdown();
+    ImGui::DestroyContext();
+#endif
+}
+
 
 
 bool CSDLVideo::init()
@@ -120,6 +129,19 @@ bool CSDLVideo::init()
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
     SDL_RenderPresent(renderer);
+
+#ifdef USE_IMGUI
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO();
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
+
+    ImGui_ImplSDL2_InitForSDLRenderer(window, renderer);
+    ImGui_ImplSDLRenderer2_Init(renderer);
+
+    gLogging.textOut(FONTCOLORS::GREEN, "Dear ImGui initialized<br>");
+#endif
 
     resizeDisplayScreen(m_VidConfig.mDisplayRect);
 
@@ -398,6 +420,24 @@ void CSDLVideo::transformScreenToDisplay()
 
         mRenderTexturePtrs.pop();
     }
+
+#ifdef USE_IMGUI
+    ImGui_ImplSDLRenderer2_NewFrame();
+    ImGui_ImplSDL2_NewFrame();
+    ImGui::NewFrame();
+
+    // Test overlay -- remove after Phase A validation
+    ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_Always);
+    ImGui::Begin("CG Debug", nullptr,
+                 ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize |
+                 ImGuiWindowFlags_NoCollapse);
+    ImGui::Text("Commander Genius + ImGui");
+    ImGui::Text("Frame: %.1f FPS", ImGui::GetIO().Framerate);
+    ImGui::End();
+
+    ImGui::Render();
+    ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), renderer);
+#endif
 
     SDL_RenderPresent(renderer);
 
