@@ -4,7 +4,6 @@
 #include "imgui.h"
 #include <vector>
 #include <string>
-#include <memory>
 
 struct ImGuiGameEntry
 {
@@ -29,7 +28,10 @@ public:
     bool render();
 
     // Get the selected game info after render() returns true
-    const ImGuiGameEntry& getSelectedGame() const { return mGames[mSelectedIndex]; }
+    // Caller must check render() returned true before calling
+    const ImGuiGameEntry& getSelectedGame() const { return mGames.at(mSelectedIndex); }
+
+    bool hasSelection() const { return mSelectedIndex >= 0 && mSelectedIndex < static_cast<int>(mGames.size()); }
 
 private:
     void renderGameList();
@@ -38,7 +40,6 @@ private:
 
     std::vector<ImGuiGameEntry> mGames;
     int mSelectedIndex = -1;
-    int mHoveredIndex = -1;
     bool mStartRequested = false;
 };
 

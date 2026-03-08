@@ -13,6 +13,8 @@ namespace CImGuiTheme
     ImVec4 panel();
     ImVec4 accentPrimary();
     ImVec4 accentSecondary();
+    ImVec4 accentSecondaryHovered();
+    ImVec4 darkBg();
     ImVec4 text();
     ImVec4 textDimmed();
 }

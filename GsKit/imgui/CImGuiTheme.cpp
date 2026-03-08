@@ -18,9 +18,11 @@ static ImVec4 hexToImVec4(uint32_t hex, float alpha = 1.0f)
 ImVec4 background()      { return hexToImVec4(0x1a1a2e); }
 ImVec4 panel()           { return hexToImVec4(0x16213e); }
 ImVec4 accentPrimary()   { return hexToImVec4(0xe94560); }
-ImVec4 accentSecondary() { return hexToImVec4(0x53d769); }
-ImVec4 text()            { return hexToImVec4(0xeaeaea); }
-ImVec4 textDimmed()      { return hexToImVec4(0x8a8a8a); }
+ImVec4 accentSecondary()        { return hexToImVec4(0x53d769); }
+ImVec4 accentSecondaryHovered() { return hexToImVec4(0x6ae87a); }
+ImVec4 darkBg()                 { return hexToImVec4(0x0d1220); }
+ImVec4 text()                   { return hexToImVec4(0xeaeaea); }
+ImVec4 textDimmed()             { return hexToImVec4(0x8a8a8a); }
 
 void apply()
 {

@@ -2,7 +2,13 @@
 
 #include "CImGuiLauncher.h"
 #include "CImGuiTheme.h"
-#include <base/GsLogging.h>
+#include "version.h"
+
+static constexpr float BOTTOM_BAR_HEIGHT = 40.0f;
+static constexpr float GAME_LIST_WIDTH_RATIO = 0.45f;
+static constexpr float PREVIEW_IMAGE_HEIGHT = 200.0f;
+static constexpr float START_BUTTON_HEIGHT = 40.0f;
+static const ImVec4 BLACK_TEXT(0.0f, 0.0f, 0.0f, 1.0f);
 
 CImGuiLauncher::CImGuiLauncher()
 {
@@ -14,19 +20,8 @@ void CImGuiLauncher::scanForGames()
     // TODO Task 7: Wire to existing game scanner
     // For now, populate test data
     mGames.clear();
-
-    ImGuiGameEntry test;
-    test.name = "Commander Keen 1";
-    test.directory = "games/Keen1";
-    test.episode = 1;
-    test.version = "1.33";
-    mGames.push_back(test);
-
-    test.name = "Commander Keen 4";
-    test.directory = "games/Keen4";
-    test.episode = 4;
-    test.version = "1.4 EGA";
-    mGames.push_back(test);
+    mGames.push_back({"Commander Keen 1", "games/Keen1", 1, false, "1.33"});
+    mGames.push_back({"Commander Keen 4", "games/Keen4", 4, false, "1.4 EGA"});
 }
 
 bool CImGuiLauncher::render()
@@ -51,7 +46,9 @@ bool CImGuiLauncher::render()
     ImGui::Text("COMMANDER GENIUS");
     ImGui::PopStyleColor();
 
-    ImGui::SameLine(ImGui::GetWindowWidth() - 100);
+    // Settings button right-aligned
+    const float settingsWidth = ImGui::CalcTextSize("Settings").x + ImGui::GetStyle().FramePadding.x * 2;
+    ImGui::SameLine(ImGui::GetWindowWidth() - settingsWidth - ImGui::GetStyle().WindowPadding.x);
     if (ImGui::Button("Settings"))
     {
         // TODO: open settings
@@ -60,15 +57,15 @@ bool CImGuiLauncher::render()
     ImGui::Separator();
 
     // Two-column layout
-    const float listWidth = ImGui::GetWindowWidth() * 0.45f;
+    const float listWidth = ImGui::GetWindowWidth() * GAME_LIST_WIDTH_RATIO;
 
-    ImGui::BeginChild("##GameList", ImVec2(listWidth, -40), true);
+    ImGui::BeginChild("##GameList", ImVec2(listWidth, -BOTTOM_BAR_HEIGHT), ImGuiChildFlags_Borders);
     renderGameList();
     ImGui::EndChild();
 
     ImGui::SameLine();
 
-    ImGui::BeginChild("##Preview", ImVec2(0, -40), true);
+    ImGui::BeginChild("##Preview", ImVec2(0, -BOTTOM_BAR_HEIGHT), ImGuiChildFlags_Borders);
     renderPreviewPanel();
     ImGui::EndChild();
 
@@ -82,7 +79,8 @@ bool CImGuiLauncher::render()
 
 void CImGuiLauncher::renderGameList()
 {
-    for (int i = 0; i < static_cast<int>(mGames.size()); i++)
+    const int count = static_cast<int>(mGames.size());
+    for (int i = 0; i < count; i++)
     {
         const bool isSelected = (mSelectedIndex == i);
 
@@ -121,10 +119,12 @@ void CImGuiLauncher::renderPreviewPanel()
     const auto& game = mGames[mSelectedIndex];
 
     // Preview image placeholder
-    ImVec2 previewSize(ImGui::GetContentRegionAvail().x, 200);
-    ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.05f, 0.07f, 0.12f, 1.0f));
-    ImGui::BeginChild("##PreviewImg", previewSize, true);
-    ImGui::Text("[ Preview Image ]");
+    const ImVec2 previewSize(ImGui::GetContentRegionAvail().x, PREVIEW_IMAGE_HEIGHT);
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, CImGuiTheme::darkBg());
+    if (ImGui::BeginChild("##PreviewImg", previewSize, ImGuiChildFlags_Borders))
+    {
+        ImGui::Text("[ Preview Image ]");
+    }
     ImGui::EndChild();
     ImGui::PopStyleColor();
 
@@ -146,9 +146,9 @@ void CImGuiLauncher::renderPreviewPanel()
 
     // Start button
     ImGui::PushStyleColor(ImGuiCol_Button, CImGuiTheme::accentSecondary());
-    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.38f, 0.92f, 0.48f, 1.0f));
-    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
-    if (ImGui::Button("  START GAME  ", ImVec2(-1, 40)))
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, CImGuiTheme::accentSecondaryHovered());
+    ImGui::PushStyleColor(ImGuiCol_Text, BLACK_TEXT);
+    if (ImGui::Button("  START GAME  ", ImVec2(-1, START_BUTTON_HEIGHT)))
     {
         mStartRequested = true;
     }
@@ -159,8 +159,9 @@ void CImGuiLauncher::renderBottomBar()
 {
     ImGui::Separator();
     ImGui::PushStyleColor(ImGuiCol_Text, CImGuiTheme::textDimmed());
-    ImGui::Text("Commander Genius v3.4  |  najawa");
-    ImGui::SameLine(ImGui::GetWindowWidth() - 60);
+    ImGui::Text("Commander Genius %s  |  najawa", CGVERSION);
+    const float quitWidth = ImGui::CalcTextSize("Quit").x + ImGui::GetStyle().FramePadding.x * 2;
+    ImGui::SameLine(ImGui::GetWindowWidth() - quitWidth - ImGui::GetStyle().WindowPadding.x);
     ImGui::PopStyleColor();
 
     ImGui::PushStyleColor(ImGuiCol_Button, CImGuiTheme::accentPrimary());
