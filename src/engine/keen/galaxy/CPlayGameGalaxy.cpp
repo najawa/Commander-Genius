@@ -406,7 +406,7 @@ void CPlayGameGalaxy::pumpEvent(const std::shared_ptr<CEvent> &evPtr)
         std::unique_ptr<CMessageBoxSelection> pMsgBox( new CMessageBoxSelection( ev->Message, ev->Options ) );
         pMsgBox->init();
 
-        mMessageBoxes.push_back( move(pMsgBox) );
+        mMessageBoxes.push_back( std::move(pMsgBox) );
     }
     else if( std::dynamic_pointer_cast<const EventEndGamePlay>(evPtr) )
     {

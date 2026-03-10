@@ -54,7 +54,7 @@ void CPlayGameVorticon::processInLevel()
         if( hinttext != "" )
 		{
 		    std::unique_ptr<CMessageBoxVort> msg( new CMessageBoxVort(gBehaviorEngine.getString(hinttext), false, true) );
-		    mMessageBoxes.push_back( move(msg) );
+		    mMessageBoxes.push_back( std::move(msg) );
 		}
 
 		// Check if the first player is dead, and if the others also are...

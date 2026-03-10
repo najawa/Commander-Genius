@@ -19,6 +19,7 @@
 #include "widgets/ComboSelection.h"
 
 #include "engine/core/CSettings.h"
+#include <sstream>
 
 
 GameSpecSettings::GameSpecSettings(const Style style, const std::string_view &engine_name) :
@@ -99,8 +100,16 @@ void GameSpecSettings::release()
     mUsersConf.mBorderColorsEnabled = mpBorderColorSwitch->isEnabled();
 
     const std::string GameResStr = mpGameResSelection->getSelection();
-    sscanf( GameResStr.c_str(), "%hux%hux",
-            &mUsersConf.mGameRect.dim.x, &mUsersConf.mGameRect.dim.y );
+    {
+        std::istringstream iss(GameResStr);
+        int gw = 0, gh = 0;
+        char separator = 0;
+        if((iss >> gw >> separator >> gh) && separator == 'x')
+        {
+            mUsersConf.mGameRect.dim.x = static_cast<Uint16>(gw);
+            mUsersConf.mGameRect.dim.y = static_cast<Uint16>(gh);
+        }
+    }
 
 
 #if defined(CAANOO) || defined(WIZ) || defined(DINGOO) || defined(NANONOTE) || defined(ANDROID)

@@ -20,10 +20,10 @@ class CCredits : public CInfoScene
 {
 public:
 	
-	void init();
-    void ponder();
-    void render();
-	void teardown();
+	void init() override;
+    void ponder() override;
+    void render() override;
+	void teardown() override;
 	
 private:
 

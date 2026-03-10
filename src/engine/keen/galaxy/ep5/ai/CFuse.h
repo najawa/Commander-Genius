@@ -21,7 +21,7 @@ class CFuse : public CGalaxySpriteObject
 public:
     CFuse(std::shared_ptr<CMap> pMap, const Uint16 foeID, const Uint32 x, const Uint32 y, const int sprVar);
 
-	void process();
+	void process() override;
 
     bool isNearby(CSpriteObject &theObject) override;
 

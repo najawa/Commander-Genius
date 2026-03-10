@@ -31,9 +31,9 @@ public:
     CControlsettings(const int selectedPlayer,
                      const Style style);
 
-    void refresh();
+    void refresh() override;
 
-	void release();
+	void release() override;
 
 private:
 
@@ -53,8 +53,8 @@ public:
     CControlSettingsBase(const int selectedPlayer,
                          const Style style);
 
-    virtual void ponder(const float deltaT);
-    virtual void release();
+    virtual void ponder(const float deltaT) override;
+    virtual void release() override;
 
 protected:
 
@@ -69,8 +69,8 @@ public:
     CControlSettingsBaseWithMapping(const int selectedPlayer,
                                     const Style style);
 
-    virtual void ponder(const float deltaT);
-    virtual void release();
+    virtual void ponder(const float deltaT) override;
+    virtual void release() override;
 
 protected:
 

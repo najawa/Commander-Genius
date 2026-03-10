@@ -18,12 +18,12 @@ public:
     CPixelate(const float speed,
               const bool modern);
 	void getSnapshot();
-    void ponder(const float deltaT);
+    void ponder(const float deltaT) override;
 
     void renderRetro();
     void renderModern();
 
-    void render();
+    void render() override;
 
 private:
     GsSurface mOldSurface;

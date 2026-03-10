@@ -219,12 +219,12 @@ bool CPlayGameVorticon::init()
         std::unique_ptr<CMessageBoxVort> msg4(new CMessageBoxVort(gBehaviorEngine.getString("EP3_MORTIMER4"),false, true));
         std::unique_ptr<CMessageBoxVort> msg5(new CMessageBoxVort(gBehaviorEngine.getString("EP3_MORTIMER5"),false, true));
         std::unique_ptr<CMessageBoxVort> msg6(new CMessageBoxVort(gBehaviorEngine.getString("EP3_MORTIMER6"),false, true));
-        mMessageBoxes.push_back(move(msg1));
-        mMessageBoxes.push_back(move(msg2));
-        mMessageBoxes.push_back(move(msg3));
-        mMessageBoxes.push_back(move(msg4));
-        mMessageBoxes.push_back(move(msg5));
-        mMessageBoxes.push_back(move(msg6));
+        mMessageBoxes.push_back(std::move(msg1));
+        mMessageBoxes.push_back(std::move(msg2));
+        mMessageBoxes.push_back(std::move(msg3));
+        mMessageBoxes.push_back(std::move(msg4));
+        mMessageBoxes.push_back(std::move(msg5));
+        mMessageBoxes.push_back(std::move(msg6));
         gAudio.playSound(int(GameSound::MORTIMER));
     }
 
@@ -563,7 +563,7 @@ void CPlayGameVorticon::handleFKeys()
 
                 std::unique_ptr<CMessageBoxVort> msg(new CMessageBoxVort(Text));
 
-                mMessageBoxes.push_back( move(msg) );
+                mMessageBoxes.push_back( std::move(msg) );
             }
         }
     }
@@ -606,7 +606,7 @@ void CPlayGameVorticon::handleFKeys()
                         gBehaviorEngine.mCheatmode.god ?
                             gBehaviorEngine.getString("GODMODEON") :
                             gBehaviorEngine.getString("GODMODEOFF")));
-        mMessageBoxes.push_back(move(msg));
+        mMessageBoxes.push_back(std::move(msg));
         gInput.flushKeys();
     }
 
@@ -614,7 +614,7 @@ void CPlayGameVorticon::handleFKeys()
     {
         gAudio.playSound(int(GameSound::GUN_CLICK), SoundPlayMode::PLAY_FORCE);
         std::unique_ptr<CMessageBoxVort> msg( new CMessageBoxVort("Game Paused") );
-        mMessageBoxes.push_back(move(msg));
+        mMessageBoxes.push_back(std::move(msg));
     }
 
     if(m_Player.empty())
@@ -737,7 +737,7 @@ void CPlayGameVorticon::teleportPlayerFromLevel(CPlayer &player, int origx, int 
     teleporter->destx = destx>>TILE_S;
     teleporter->desty = desty>>TILE_S;
     teleporter->whichplayer = int(player.m_index);
-    mSpriteObjectContainer.push_back(move(teleporter));
+    mSpriteObjectContainer.push_back(std::move(teleporter));
 }
 
 void CPlayGameVorticon::collectHighScoreInfo(CHighScores &highScores)

@@ -25,8 +25,8 @@ public:
                   const direction_t hDir,
                   const direction_t vDir);
 
-    void ponder(const float deltaT);
-    void render();
+    void ponder(const float deltaT) override;
+    void render() override;
 
     int getScrollPosition();
 

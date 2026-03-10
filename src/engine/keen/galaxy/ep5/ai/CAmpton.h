@@ -34,21 +34,21 @@ public:
 	void processStopPole();
 	void processFlipSwitch();	
 	
-    bool isNearby(CSpriteObject &);
+    bool isNearby(CSpriteObject &) override;
 
-	int checkSolidD( int x1, int x2, int y2, const bool push_mode );
+	int checkSolidD( int x1, int x2, int y2, const bool push_mode ) override;
 
     /**
      * @brief processShooting   Throwing (Keen 9)
      */
     void processShooting();
 
-	void process();
+	void process() override;
 
 	/**
 	 * What happens if the slug gets touched by another object
 	 */
-	void getTouchedBy(CSpriteObject &theObject);
+	void getTouchedBy(CSpriteObject &theObject) override;
 	
 private:
     int mTimer = 0;

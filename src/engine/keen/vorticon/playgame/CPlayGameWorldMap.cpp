@@ -186,7 +186,7 @@ void CPlayGameVorticon::YourShipNeedsTheseParts()
     if (!bat) MessageBox->addTileAt(322, 8<<3,  4<<3);
     if (!vac) MessageBox->addTileAt(323, 12<<3, 4<<3);
     if (!wis) MessageBox->addTileAt(324, 16<<3, 4<<3);
-	mMessageBoxes.push_back(move(MessageBox));
+	mMessageBoxes.push_back(std::move(MessageBox));
 }
 
 void CPlayGameVorticon::ShipEp3()
@@ -194,7 +194,7 @@ void CPlayGameVorticon::ShipEp3()
 	// get one of four random strings and display it!!
 	std::string strname = "EP3_SHIP"+ itoa((rand()%4)+1);
 	std::unique_ptr<CMessageBoxVort> msg( new CMessageBoxVort(gBehaviorEngine.getString(strname)) );
-	mMessageBoxes.push_back( move(msg) );
+	mMessageBoxes.push_back( std::move(msg) );
 }
 
 void CPlayGameVorticon::showKeensLeft()
@@ -325,7 +325,7 @@ void CPlayGameVorticon::teleportPlayer(int objectID, CPlayer &player)
 	teleporter->destx = destx>>TILE_S;
 	teleporter->desty = desty>>TILE_S;
 	teleporter->whichplayer = player.m_index;
-	mSpriteObjectContainer.push_back(move(teleporter));
+	mSpriteObjectContainer.push_back(std::move(teleporter));
 }
 
 void CPlayGameVorticon::readTeleportDestCoordinatesEP1(int objectID, int &destx, int &desty)

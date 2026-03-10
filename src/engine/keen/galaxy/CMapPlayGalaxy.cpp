@@ -48,7 +48,7 @@ void CMapPlayGalaxy::pumpEvent(const std::shared_ptr<CEvent> &evPtr)
     {
         std::shared_ptr<CGalaxySpriteObject> obj( static_cast<CGalaxySpriteObject*>(
                             const_cast<CSpriteObject*>(ev->pObject) ) );
-        mObjectPtr.push_back( move(obj) );
+        mObjectPtr.push_back( std::move(obj) );
     }
     else if( const auto ev = std::dynamic_pointer_cast<const EventSpawnFoot>(evPtr) ) // Special Case where the Foot is created
     {                                                                                // Episode 4 Secret level

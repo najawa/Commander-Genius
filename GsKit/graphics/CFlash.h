@@ -28,8 +28,8 @@ public:
     CFlash(Uint32 msecs, Uint8 speed=1, const GsColor color=GsColor(0xFF, 0xFF, 0xFF) );
     CFlash(Uint32 msecs, Uint8 speed=1, const GsColor color=GsColor(0xFF, 0xFF, 0xFF), Uint8 m_maxalpha=128 );
 
-    void ponder(const float deltaT);
-    void render();
+    void ponder(const float deltaT) override;
+    void render() override;
 
 private:
 

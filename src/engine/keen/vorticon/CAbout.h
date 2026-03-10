@@ -21,10 +21,10 @@ class CAbout : public CInfoScene
 public:
 	CAbout(const std::string &type);
 	
-	void init();
-    void ponder();
-    void render();
-	void teardown();
+	void init() override;
+    void ponder() override;
+    void render() override;
+	void teardown() override;
 	
 private:
     static const int m_numberoflines = 11;	// number of lines to print

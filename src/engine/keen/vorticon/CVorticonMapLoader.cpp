@@ -295,7 +295,7 @@ void CVorticonMapLoaderWithPlayer::addWorldMapObject(unsigned int t, Uint16 x, U
             {
                 std::unique_ptr<CMessie> messie(new CMessie(mpMap, x<<CSF, y<<CSF));
                 m_NessieAlreadySpawned = true;
-                mpSpriteObjectContainer.push_back(move(messie));
+                mpSpriteObjectContainer.push_back(std::move(messie));
             }
         }
         break;
@@ -530,7 +530,7 @@ void CVorticonMapLoaderWithPlayer::addSpriteObject(unsigned int t, Uint16 x, Uin
 			if(enemyobject != NULL)
 			{
 			    std::unique_ptr<CVorticonSpriteObject> obj(enemyobject);
-			    mpSpriteObjectContainer.push_back(move(obj));
+			    mpSpriteObjectContainer.push_back(std::move(obj));
 			}
 		}
 	}

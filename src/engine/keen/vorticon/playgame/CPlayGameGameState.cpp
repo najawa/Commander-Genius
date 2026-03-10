@@ -124,7 +124,7 @@ bool CPlayGameVorticon::loadXMLGameState()
             {
               std::unique_ptr<CVorticonSpriteObject> object( new CVorticonSpriteObject( mMap, 0, 0, OBJ_NONE, sprVarID) );
               object->exists = false;
-              mSpriteObjectContainer.push_back(move(object));
+              mSpriteObjectContainer.push_back(std::move(object));
             }
 
             CVorticonSpriteObject &spriteObj = *(mSpriteObjectContainer.at(spriteId));

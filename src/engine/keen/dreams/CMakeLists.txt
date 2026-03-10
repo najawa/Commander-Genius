@@ -18,6 +18,9 @@ set(HSRC
     dreamsintro.h
     )
 
+# Suppress warnings from vendored refkeen headers included by dreams code
+add_definitions(-Wno-deprecated-declarations)
+
 add_library(engine_keen_dreams STATIC ${CXXSRC} ${HSRC})
 
 target_link_libraries(engine_keen_dreams refkeen engine_keen)

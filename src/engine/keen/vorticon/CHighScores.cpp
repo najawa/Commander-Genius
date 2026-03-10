@@ -8,6 +8,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <stdexcept>
 
 #include "CHighScores.h"
 #include <base/CInput.h>
@@ -355,15 +356,15 @@ void CHighScores::writeHighScoreCommon(int score)
 {
 	m_Place=6;
 	int num;
-	
-	num = atoi(m_Score[m_Place]);
+
+	try { num = std::stoi(m_Score[m_Place]); } catch(const std::exception&) { num = 0; }
 	if(num > score)
 		return; // Sorry, but score not high enough
-	
+
 	// Enough Points,
 	// change the Highscore config to writing..
 	mp_process = &CHighScores::processWriting;
-	
+
 	while(m_Place>0 && score > num)
 	{
 		m_Name[m_Place] = m_Name[m_Place-1];
@@ -371,9 +372,11 @@ void CHighScores::writeHighScoreCommon(int score)
 		memcpy(m_Extra[m_Place], m_Extra[m_Place-1], 4);
 		m_Cities[m_Place] = m_Cities[m_Place-1];
 		m_Place--;
-		
+
 		if(m_Place > 0)
-			num = atoi(m_Score[m_Place-1]);
+		{
+			try { num = std::stoi(m_Score[m_Place-1]); } catch(const std::exception&) { num = 0; }
+		}
 	}
 	
 	m_Score[m_Place] = itoa(score);

@@ -18,6 +18,7 @@
 #include <base/interface/FindFile.h>
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <SDL_syswm.h>
 #include <SDL_image.h>
 #if defined(__APPLE__)
@@ -218,8 +219,12 @@ bool CVideoDriver::initResolutionList()
 #if !defined(EMBEDDED)
     for (unsigned int c = 0; c < NUM_MAIN_RESOLUTIONS; c++) {
         // Depth won't be read anymore! Take the one the system is using actually
-        if (sscanf(ResolutionsList[c], "%hux%hu", &resolution.dim.x, &resolution.h)
-                >= 2) {
+        std::istringstream iss(ResolutionsList[c]);
+        int rw = 0, rh = 0;
+        char sep = 0;
+        if ((iss >> rw >> sep >> rh) && sep == 'x') {
+            resolution.dim.x = static_cast<Uint16>(rw);
+            resolution.h = static_cast<Uint16>(rh);
             // Now check if it's possible to use this resolution
             verifyResolution(resolution, SDL_FULLSCREEN);
         }

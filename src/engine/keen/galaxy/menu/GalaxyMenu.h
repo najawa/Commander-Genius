@@ -14,7 +14,7 @@ public:
 
     GalaxyMenu( const GsRect<float>& rect );
 
-    void render();
+    void render() override;
 };
 
 #endif /* GALAXYMENU_H */

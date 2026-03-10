@@ -20,11 +20,11 @@ class COptions : public GameMenu
 public:
     COptions(const Style style);
 
-    void refresh();
+    void refresh() override;
 
-    void ponder(const float);
+    void ponder(const float) override;
 
-	void release();
+	void release() override;
 
 private:
     std::list<Switch*> mpOptionList;

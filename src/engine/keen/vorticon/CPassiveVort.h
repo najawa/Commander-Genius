@@ -21,13 +21,13 @@ class CPassiveVort : public CPassive
 {
 public:
 
-    bool init();
+    bool init() override;
 
     void redrawMap();
 
-    void pumpEvent(const std::shared_ptr<CEvent> &evPtr);
-    void ponder(const float deltaT);
-    void render();
+    void pumpEvent(const std::shared_ptr<CEvent> &evPtr) override;
+    void ponder(const float deltaT) override;
+    void render() override;
 
 private:
 

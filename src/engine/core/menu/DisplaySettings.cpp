@@ -21,6 +21,7 @@
 #include "engine/core/CSettings.h"
 
 #include "DisplaySettings.h"
+#include <sstream>
 
 
 DisplaySettings::DisplaySettings(const Style style) :
@@ -195,11 +196,15 @@ void DisplaySettings::release()
     {
         const std::string arcStr = mpAspectSelection->getSelection();
 
-        const int numRead = sscanf(arcStr.c_str(),"%i:%i",
-                               &mMyNewConf.mAspectCorrection.dim.x,
-                               &mMyNewConf.mAspectCorrection.dim.y);
-
-        if(numRead < 2)
+        std::istringstream iss(arcStr);
+        int ax = 0, ay = 0;
+        char separator = 0;
+        if((iss >> ax >> separator >> ay) && separator == ':')
+        {
+            mMyNewConf.mAspectCorrection.dim.x = ax;
+            mMyNewConf.mAspectCorrection.dim.y = ay;
+        }
+        else
         {
             mMyNewConf.mAspectCorrection.dim.x = 0;
             mMyNewConf.mAspectCorrection.dim.y = 0;
@@ -255,12 +260,13 @@ void DisplaySettings::release()
     // Read correct resolution
     {
         const std::string resStr = mpResolutionSelection->getSelection();
-        int w, h;
 
-        const int numRead = sscanf(resStr.c_str(),"%ix%i", &w, &h);
-        if(numRead == 2)
+        std::istringstream iss(resStr);
+        int w = 0, h = 0;
+        char separator = 0;
+        if((iss >> w >> separator >> h) && separator == 'x')
         {
-            GsVec2D<Uint16> res = {w, h};
+            GsVec2D<Uint16> res = {static_cast<Uint16>(w), static_cast<Uint16>(h)};
             mMyNewConf.setResolution(res);
         }
     }

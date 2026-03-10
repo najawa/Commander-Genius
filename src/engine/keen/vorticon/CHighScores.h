@@ -28,15 +28,15 @@ public:
 
 	void fetchScoreTable();
 
-	void init();
-	void teardown();
+	void init() override;
+	void teardown() override;
 
 	void writeEP1HighScore(int score, bool extra[4]);
 	void writeEP2HighScore(int score, int cities_saved);
 	void writeHighScoreCommon(int score);
 	
-    void ponder();
-    void render();
+    void ponder() override;
+    void render() override;
 
 private:
 	std::shared_ptr<CMap> mpMap;

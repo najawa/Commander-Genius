@@ -21,11 +21,11 @@ class CHelp : public CInfoScene
 public:
 	CHelp(const std::string &type);
 
-	void init();
-	void teardown();
+	void init() override;
+	void teardown() override;
 
-    void ponder();
-    void render();
+    void ponder() override;
+    void render() override;
 
 private:
 	std::string mTextType;

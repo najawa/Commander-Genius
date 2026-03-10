@@ -33,14 +33,14 @@ public:
 	
     bool isNearby(CSpriteObject &theObject) override;
 
-	void process();
-	
-	void draw();
+	void process() override;
+
+	void draw() override;
 
 	/**
 	 * What happens if the foe gets touched by another object
 	 */
-	void getTouchedBy(CSpriteObject &theObject);
+	void getTouchedBy(CSpriteObject &theObject) override;
 	
 private:
 	int mTimer;

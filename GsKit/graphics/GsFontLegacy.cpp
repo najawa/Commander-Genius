@@ -16,6 +16,8 @@
 #include "AlternateFont.xpm"
 #include <string.h>
 #include <cstdlib>
+#include <sstream>
+#include <string>
 
 ///////////////////////////////////
 ///// Initialization Routines /////
@@ -62,7 +64,10 @@ SDL_Surface *loadfromXPMData(const char **data, const SDL_PixelFormat *format, c
     int width, height, colors;
 
     // Read the dimensions and amount of colors
-    sscanf((const char*)data[0], "%d %d %d", &width, &height, &colors);
+    {
+        std::istringstream iss((const char*)data[0]);
+        iss >> width >> height >> colors;
+    }
 
     // Create the surface
     SDL_Surface *sfc = SDL_CreateRGBSurface( SDL_SWSURFACE, width, height,
@@ -96,8 +101,28 @@ SDL_Surface *loadfromXPMData(const char **data, const SDL_PixelFormat *format, c
     memset(colorCode, 0, 7*sizeof(char) );
     for( int c=0; c<colors ; c++ )
     {
-        sscanf(data[c+1], "%c\t%c #%s", &charCode, &dummy, colorCode);
-        color = strtol( colorCode, NULL, 16 );
+        const std::string line(data[c+1]);
+        if(line.size() >= 5)
+        {
+            charCode = line[0];
+            // Skip tab and dummy char, find '#'
+            const auto hashPos = line.find('#');
+            if(hashPos != std::string::npos && hashPos + 1 < line.size())
+            {
+                const std::string hexStr = line.substr(hashPos + 1);
+                char *endptr = nullptr;
+                color = std::strtoul(hexStr.c_str(), &endptr, 16);
+            }
+            else
+            {
+                color = 0;
+            }
+        }
+        else
+        {
+            charCode = ' ';
+            color = 0;
+        }
         colorMap[charCode] = color;
     }
 

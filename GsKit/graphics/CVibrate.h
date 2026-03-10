@@ -20,8 +20,8 @@ class CVibrate : public CEffects
 public:
 	CVibrate(Uint32 msecs);
 
-    void ponder(const float deltaT);
-    void render();
+    void ponder(const float deltaT) override;
+    void render() override;
 
 private:
 	Uint32 m_StartTime;

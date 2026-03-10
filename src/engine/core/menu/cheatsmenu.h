@@ -13,9 +13,9 @@ public:
 
     void init();
 
-    void refresh();
+    void refresh() override;
 
-    void release();
+    void release() override;
 
 
 private:

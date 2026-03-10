@@ -15,9 +15,9 @@ class CLoadMenu : public GameMenu
 public:
         CLoadMenu(const Style &style);
 
-        void sendEvent(std::shared_ptr<CEvent> &command);
+        void sendEvent(std::shared_ptr<CEvent> &command) override;
 
-    void refresh();
+    void refresh() override;
 };
 
 #endif /* CLOADMENU_H_ */

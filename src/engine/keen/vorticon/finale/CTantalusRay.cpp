@@ -76,7 +76,7 @@ void CTantalusRay::shootray()
                                       OBJ_NONE, 0) );
 		shootObject->solid = false;
 		shootObject->exists = shootObject->onscreen = true;
-		m_Object.push_back( move(shootObject) );
+		m_Object.push_back( std::move(shootObject) );
         gAudio.playSound(int(GameSound::KEEN_FIRE), SoundPlayMode::PLAY_NOW);
 
 		m_mustsetup = false;
@@ -116,7 +116,7 @@ void CTantalusRay::explodeEarth()
 		{
 		    std::unique_ptr<CEarthExplosion> expl( new CEarthExplosion(mpMap,shot_x+((rnd()%32)<<STC), shot_y+((rnd()%32)<<STC)-(8<<STC)) );
 		    expl->solid = false;
-		    m_Object.push_back( move(expl) );
+		    m_Object.push_back( std::move(expl) );
 		}
 
 		switch(m_step)
@@ -128,21 +128,21 @@ void CTantalusRay::explodeEarth()
 				chunk->m_Direction = EC_UPLEFTLEFT;
 				chunk->mSpriteIdx = (i > 4) ? EARTHCHUNK_SMALL_DN : EARTHCHUNK_SMALL_UP;
 				
-				m_Object.push_back( move(chunk) );
+				m_Object.push_back( std::move(chunk) );
 			}
 
 			break;
 		case 6:
 			chunk.reset( new CEarthChunk(mpMap,shot_x+(16<<STC), shot_y+(16<<STC)) );
-			m_Object.push_back( move(chunk) );
+			m_Object.push_back( std::move(chunk) );
 			break;
 		case 7:
 			chunk.reset( new CEarthChunk(mpMap,shot_x+(24<<STC), shot_y-(8<<STC)) );
-			m_Object.push_back( move(chunk) );
+			m_Object.push_back( std::move(chunk) );
 			break;
 		case 8:
 			chunk.reset( new CEarthChunk(mpMap,shot_x+(16<<STC), shot_y+(4<<STC)) );
-			m_Object.push_back( move(chunk) );
+			m_Object.push_back( std::move(chunk) );
 			break;
 		case 10:
 			// spawn four big fragments of the earth to go flying off
@@ -150,25 +150,25 @@ void CTantalusRay::explodeEarth()
 			chunk->m_Direction = EC_UPLEFT;
 			chunk->mSpriteIdx = EARTHCHUNK_BIG_UP;
 			chunk->solid = false;
-			m_Object.push_back( move(chunk) );
+			m_Object.push_back( std::move(chunk) );
 
 			chunk.reset( new CEarthChunk(mpMap,shot_x+(8<<STC), shot_y) );
 			chunk->m_Direction = EC_UPRIGHT;
 			chunk->mSpriteIdx = EARTHCHUNK_BIG_UP;
 			chunk->solid = false;
-			m_Object.push_back( move(chunk) );
+			m_Object.push_back( std::move(chunk) );
 
 			chunk.reset( new CEarthChunk(mpMap,shot_x+(8<<STC), shot_y) );
 			chunk->m_Direction = EC_DOWNRIGHT;
 			chunk->mSpriteIdx = EARTHCHUNK_BIG_DN;
 			chunk->solid = false;
-			m_Object.push_back( move(chunk) );
+			m_Object.push_back( std::move(chunk) );
 
 			chunk.reset( new CEarthChunk(mpMap,shot_x+(8<<STC), shot_y) );
 			chunk->m_Direction = EC_DOWNLEFT;
 			chunk->mSpriteIdx = EARTHCHUNK_BIG_DN;
 			chunk->solid = false;
-			m_Object.push_back( move(chunk) );
+			m_Object.push_back( std::move(chunk) );
 
 			// Hide the Earth!!! Now it's destroyed
 			for(int ex = 0; ex<4 ; ex++)

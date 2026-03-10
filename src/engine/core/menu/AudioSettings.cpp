@@ -7,6 +7,7 @@
 
 #include "AudioSettings.h"
 #include <base/interface/StringUtils.h>
+#include <stdexcept>
 
 #include "engine/core/CSettings.h"
 #include <base/audio/music/CMusic.h>
@@ -128,7 +129,11 @@ void CAudioSettings::ponder(const float deltaT)
 void CAudioSettings::release()
 {
 #if !defined(EMBEDDED)
-	mAudioSpec.freq = atoi( mpRate->getSelection().c_str() );
+	try {
+		mAudioSpec.freq = std::stoi( mpRate->getSelection() );
+	} catch(const std::exception&) {
+		mAudioSpec.freq = 44100;
+	}
 #endif
 
 	mAudioSpec.channels = mpStereo->isEnabled() ? 2 : 1;

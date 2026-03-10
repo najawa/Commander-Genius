@@ -9,6 +9,7 @@
 #include <base/GsArguments.h>
 
 #include <base/audio/Audio.h>
+#include <stdexcept>
 
 #include "GalaxyEngine.h"
 #include "engine/core/CResourceLoader.h"
@@ -420,7 +421,8 @@ void GalaxyEngine::pumpEvent(const std::shared_ptr<CEvent> &evPtr)
         // Level as parameter given?
         if(!argLevel.empty())
         {
-            const int startLevel = atoi(argLevel.c_str());
+            int startLevel = 0;
+            try { startLevel = std::stoi(argLevel); } catch(const std::exception&) { startLevel = 0; }
 
             // There always is at least one sprite variant, the original one!
             if(mSpriteVars.empty())

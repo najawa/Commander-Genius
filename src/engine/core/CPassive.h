@@ -35,13 +35,13 @@ public:
     CPassive();
     virtual ~CPassive();
 
-    void pumpEvent(const std::shared_ptr<CEvent> &evPtr);
+    void pumpEvent(const std::shared_ptr<CEvent> &evPtr) override;
 
-    virtual bool init() = 0;
+    virtual bool init() override = 0;
 
-    virtual void ponder(const float deltaT);
+    virtual void ponder(const float deltaT) override;
 
-    virtual void render() = 0;
+    virtual void render() override = 0;
 
     // Getters
     char getEpisode() { return m_Episode; }

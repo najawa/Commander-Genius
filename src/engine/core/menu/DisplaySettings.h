@@ -28,9 +28,9 @@ public:
 
 	DisplaySettings(const Style style);
 
-    void refresh();
+    void refresh() override;
 
-	void release();
+	void release() override;
 
     CVidConfig mMyNewConf;
 

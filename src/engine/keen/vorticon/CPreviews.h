@@ -22,10 +22,10 @@ class CPreviews : public CInfoScene
 public:
 	int openNextScene();
 
-	void init();
-    void ponder();
-    void render();
-	void teardown();
+	void init() override;
+    void ponder() override;
+    void render() override;
+	void teardown() override;
 
     void drawPreviewScene();
     void showText();

@@ -12,6 +12,11 @@ add_definitions(-DREFKEEN_VER_KDREAMS)
 add_definitions(-DREFKEEN_VER_KDREAMS_ANYEGA_ALL)
 add_definitions(-DGRMODE=EGAGR)
 
+# Vendored RefKeen code contains intentional CP437 encoded strings
+# and uses deprecated C functions (sprintf, strcpy) throughout
+add_definitions(-Wno-invalid-source-encoding)
+add_definitions(-Wno-deprecated-declarations)
+
 # TODO: This is not a definition
 ADD_DEFINITIONS(-Werror=cast-align)
 

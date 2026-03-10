@@ -1,0 +1,35 @@
+---
+# Commander Genius — clang-tidy configuration
+# Focus: security-critical checks + modernization
+
+Checks: >
+  -*,
+  bugprone-*,
+  -bugprone-easily-swappable-parameters,
+  -bugprone-narrowing-conversions,
+  cert-*,
+  -cert-err58-cpp,
+  clang-analyzer-security.*,
+  clang-analyzer-core.*,
+  misc-no-recursion,
+  modernize-use-override,
+  modernize-use-nullptr,
+  modernize-use-auto,
+  modernize-use-using,
+  performance-unnecessary-copy-initialization,
+  performance-unnecessary-value-param,
+  readability-redundant-string-cstr,
+
+WarningsAsErrors: >
+  bugprone-use-after-move,
+  bugprone-string-constructor,
+  bugprone-sizeof-expression,
+  cert-err34-c,
+  clang-analyzer-security.*,
+
+CheckOptions:
+  - key: modernize-use-auto.MinTypeNameLength
+    value: '5'
+
+# Exclude vendored third-party code from analysis
+HeaderFilterRegex: '^(?!.*/refkeen/|.*/lua/|.*/unzip/|.*/depklite/|.*/property_tree/).*'

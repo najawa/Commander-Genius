@@ -1286,7 +1286,13 @@ bool CEGAGraphicsGalaxy::readBitmaps()
             const auto numStr = bmpFile.substr(bmpFile.length()-8,
                                                bmpFile.length()-4);
 
-            int idx = atoi(numStr.c_str());
+            int idx = 0;
+            try { idx = std::stoi(numStr); }
+            catch(const std::exception&)
+            {
+                gLogging << "Warning: Could not parse index from filename: " << bmpFile;
+                continue;
+            }
 
             if(idx >= int(bmpVecPlayer.size()))
             {
@@ -1716,7 +1722,13 @@ bool CEGAGraphicsGalaxy::readSprites( const size_t numSprites,
         const auto numStr = sprFile.substr(sprFile.length()-8,
                                            sprFile.length()-4);
 
-        int idx = atoi(numStr.c_str());
+        int idx = 0;
+        try { idx = std::stoi(numStr); }
+        catch(const std::exception&)
+        {
+            gLogging << "Warning: Could not parse index from filename: " << sprFile;
+            continue;
+        }
 
         if(idx >= int(gGraphics.getSpriteVec(0).size()))
         {
@@ -1845,7 +1857,13 @@ bool CEGAGraphicsGalaxy::readSprites( const size_t numSprites,
             const auto numStr = spriteFile.substr(spriteFile.length()-8,
                                                   spriteFile.length()-4);
 
-            int idx = atoi(numStr.c_str());
+            int idx = 0;
+            try { idx = std::stoi(numStr); }
+            catch(const std::exception&)
+            {
+                gLogging << "Warning: Could not parse index from filename: " << spriteFile;
+                continue;
+            }
 
             if(idx >= int(SpriteVecPlayer.size()))
             {
@@ -2082,7 +2100,16 @@ bool CEGAGraphicsGalaxy::readMiscStuff()
             const auto numStr = bmpFile.substr(bmpFile.length()-8,
                                                bmpFile.length()-4);
 
-            size_t idx = atoi(numStr.c_str());
+            int rawIdx = 0;
+            try { rawIdx = std::stoi(numStr); }
+            catch(const std::exception&)
+            {
+                gLogging << "Warning: Could not parse index from filename: " << bmpFile;
+                continue;
+            }
+            if(rawIdx < 0)
+                continue;
+            const size_t idx = static_cast<size_t>(rawIdx);
 
             if((miscIdx-1) != idx)
                 continue;

@@ -25,8 +25,8 @@ public:
 				bool &hideobjects,
 				std::vector< std::unique_ptr< CVorticonSpriteObject> > &Object);
 
-    void ponder();
-    void render();
+    void ponder() override;
+    void render() override;
 
 
 	void ReturnsToShip();

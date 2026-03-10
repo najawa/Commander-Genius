@@ -21,9 +21,9 @@ class CPassiveGalaxy : public CPassive
 public:
 	CPassiveGalaxy();
 
-    bool init();
-    void ponder(const float deltaT);
-    void render();
+    bool init() override;
+    void ponder(const float deltaT) override;
+    void render() override;
 
     /**
      * @brief processIntro  Terminator text scrolling

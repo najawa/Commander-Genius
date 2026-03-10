@@ -17,6 +17,7 @@
 #include "CBehaviorEngine.h"
 #include "fileio/CConfiguration.h"
 #include "engine/core/VGamepads/vgamepadsimple.h"
+#include <sstream>
 
 /**
  * \brief	Only saves the last used resolution or window size.
@@ -249,8 +250,16 @@ bool CSettings::loadDrvCfg()
     std::string arcStr;
     config.ReadString("Video", "aspect", arcStr, "none");
     vidConf.mAspectCorrection.dim = 0;
-    sscanf( arcStr.c_str(), "%i:%i", &vidConf.mAspectCorrection.dim.x,
-            &vidConf.mAspectCorrection.dim.y );
+    {
+        std::istringstream iss(arcStr);
+        char separator = 0;
+        int ax = 0, ay = 0;
+        if((iss >> ax >> separator >> ay) && separator == ':')
+        {
+            vidConf.mAspectCorrection.dim.x = ax;
+            vidConf.mAspectCorrection.dim.y = ay;
+        }
+    }
 
     config.ReadKeyword("Video", "vsync", &vidConf.mVSync, true);
     config.ReadInteger("Video", "filter", &value, 1);

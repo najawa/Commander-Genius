@@ -35,6 +35,7 @@
 #include <fileio/KeenFiles.h>
 
 #include <algorithm>
+#include <stdexcept>
 
 namespace vorticon
 {
@@ -238,7 +239,8 @@ void VorticonEngine::switchToPassiveMode()
     // Level as parameter given?
     if(!argLevel.empty())
     {
-        const int startLevel = atoi(argLevel.c_str());
+        int startLevel = 0;
+        try { startLevel = std::stoi(argLevel); } catch(const std::exception&) { startLevel = 0; }
         gEventManager.add(new StartNewGameEvent(EASY, startLevel));
     }
 

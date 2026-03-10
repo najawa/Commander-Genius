@@ -20,17 +20,17 @@ public:
                    const int ep,
                    const std::string &dataPath);
 
-    void ponder(const float deltaT);
+    void ponder(const float deltaT) override;
 
-    void render();
+    void render() override;
 
-    void openMainMenu();
+    void openMainMenu() override;
 
-    bool loadResources( const Uint8 flags );
+    bool loadResources( const Uint8 flags ) override;
 
     void switchToPassiveMode();
 
-    void pumpEvent(const std::shared_ptr<CEvent> &evPtr);
+    void pumpEvent(const std::shared_ptr<CEvent> &evPtr) override;
 
 private:
     std::shared_ptr<CInfoScene> mpInfoScene;

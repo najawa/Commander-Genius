@@ -22,8 +22,8 @@ public:
 
     void getSnapshot();
 
-    void ponder(const float deltaT);
-    void render();
+    void ponder(const float deltaT) override;
+    void render() override;
     
     GsSurface &getDarkSfc()
     {  return mDarkSurface;  }

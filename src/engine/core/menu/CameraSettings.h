@@ -20,9 +20,9 @@ class CCameraSettings : public GameMenu
 public:
 	CCameraSettings(const GsControl::Style style);
 
-    void refresh();
+    void refresh() override;
 
-	void release();
+	void release() override;
 
 private:
 	st_camera_bounds m_CameraBounds;

@@ -45,6 +45,8 @@ endif( ZLIB_FOUND )
 
 add_library(unzip STATIC ${CXXSRC} ${HSRC})
 
+# Vendored minizip uses K&R style function definitions
+target_compile_options(unzip PRIVATE -Wno-deprecated-non-prototype)
 target_compile_definitions(unzip PRIVATE -DIOAPI_NO_64)
 
 # Link zlib

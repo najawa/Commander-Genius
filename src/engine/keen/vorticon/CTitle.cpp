@@ -65,7 +65,7 @@ bool Title::init(int Episode)
             std::unique_ptr<CSpriteObject> obj(new CEGABitmap( mpMap, pSurface, pBitmap ));
             obj->setScrPos( width, 182 );
             pBitmap->_draw( width, 182, pSurface);
-            mObjects.push_back(move(obj));
+            mObjects.push_back(std::move(obj));
         }
     }
 	

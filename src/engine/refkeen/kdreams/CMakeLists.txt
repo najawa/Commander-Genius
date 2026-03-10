@@ -4,6 +4,9 @@ FILE(GLOB INCLUDES *.h)
 
 set ( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wswitch")
 
+# Vendored RefKeen/kdreams code - suppress warnings for legacy C patterns
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-invalid-source-encoding -Wno-string-plus-int -Wno-deprecated-declarations")
+
 add_definitions(-DREFKEEN_VER_KDREAMS)
 add_definitions(-DREFKEEN_VER_KDREAMS_ANYEGA_ALL)
 add_definitions(-DGRMODE=EGAGR)

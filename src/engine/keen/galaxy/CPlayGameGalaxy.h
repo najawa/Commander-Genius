@@ -34,25 +34,25 @@ public:
     CPlayGameGalaxy(const int startlevel,
                     const std::vector<int> &spriteVars);
 
-    bool loadXMLGameState();
-    bool saveXMLGameState();
+    bool loadXMLGameState() override;
+    bool saveXMLGameState() override;
     bool init() override;
 
     void looseManagement(const int playerID,
                          const uint16_t levelObj,
                          const std::string &levelName);
 
-    void pumpEvent(const std::shared_ptr<CEvent> &evPtr);
+    void pumpEvent(const std::shared_ptr<CEvent> &evPtr) override;
 
-    void ponder(const float deltaT);
-    void render();
+    void ponder(const float deltaT) override;
+    void render() override;
 
     void processInput();
     void processRendering();
 
     void operator<<(GsKit::ptree &invNode);
 
-    void cleanup() {}
+    void cleanup() override {}
 
 private:
     std::vector<CInventory> mInventoryVec;
