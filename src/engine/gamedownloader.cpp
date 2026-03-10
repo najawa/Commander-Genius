@@ -101,11 +101,14 @@ int downloadFile(const std::string &filename, int &progress,
 
     std::string urlString;
 
-#ifdef FORCE_HTTPS
     config.ReadString("store", "base-url", urlString, "https://downloads.sourceforge.net/project/clonekeenplus/Downloads");
-#else
-    config.ReadString("store", "base-url", urlString, "http://downloads.sourceforge.net/project/clonekeenplus/Downloads");
-#endif // FORCE_HTTPS
+
+    // Reject plaintext HTTP URLs — enforce HTTPS for all downloads
+    if(urlString.substr(0, 7) == "http://")
+    {
+        gLogging.ftextOut( FONTCOLORS::RED, "Rejecting insecure HTTP URL: %s — HTTPS required<br>", urlString.c_str());
+        return false;
+    }
 
     config.WriteString("store", "base-url", urlString);
 
@@ -139,10 +142,15 @@ int downloadFile(const std::string &filename, int &progress,
       curl_easy_setopt(curl, CURLOPT_URL, urlString.c_str());
 
       curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+      curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 5L);
 
-      curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+      // Enforce TLS certificate verification
+      curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
+      curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 2L);
 
-      curl_easy_setopt(curl, CURLOPT_USE_SSL, CURLUSESSL_NONE);
+      // Connection and transfer timeouts
+      curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 30L);
+      curl_easy_setopt(curl, CURLOPT_TIMEOUT, 600L);
 
       /* pass the struct pointer into the progress function */
       curl_easy_setopt(curl, CURLOPT_PROGRESSDATA, &prog);

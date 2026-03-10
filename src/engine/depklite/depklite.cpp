@@ -4,6 +4,7 @@
 
 #include <cstdlib>
 #include <cstring>
+#include <limits>
 #include <base/TypeDefinitions.h>
 #include <base/GsLogging.h>
 #include <cstring>
@@ -264,18 +265,30 @@ bool depklite_unpack(const std::vector<unsigned char> compData, std::vector<unsi
 
     gLogging << "depklite - unpacking...\n";
 
-    const int32_t fileSize = compData.size();
+    // Use size_t to avoid signed overflow and ensure the value fits.
+    const size_t fileSize = compData.size();
 	// Offset of compressed data in the executable, which is 800
 	// for Keen Dreams v1.00 (KDREAMS.EXE), and 752 for The Elder Scrolls Arena (A.EXE).
-	const int compressedDataOffset = 800;
+	const size_t compressedDataOffset = 800;
 
-	Debug_check(fileSize >= compressedDataOffset, "depklite - Input file is unexpectedly too small!\n");
+    if (fileSize < compressedDataOffset)
+    {
+        gLogging << "depklite - Input file is unexpectedly too small!\n";
+        return false;
+    }
+
+    // Guard against integer overflow when computing the decompressed buffer size.
+    // A 10x expansion factor is an upper bound for PKLITE-compressed DOS EXEs.
+    const size_t decompMaxSize = 10;
+    if (fileSize > std::numeric_limits<size_t>::max() / decompMaxSize)
+    {
+        gLogging << "depklite - Input file is too large to decompress safely!\n";
+        return false;
+    }
 
     uint8_t *compressedStart = new uint8_t[fileSize - compressedDataOffset];
 	Debug_check(compressedStart, "depklite - Out of memory!\n");
 
-    //fseek(fp, compressedDataOffset, SEEK_SET);
-    //fread(compressedStart, fileSize - compressedDataOffset, 1, fp);
     memcpy(compressedStart, compData.data()+compressedDataOffset, fileSize - compressedDataOffset);
 
 	GetNextBit_Data getNextBitData;
@@ -283,7 +296,7 @@ bool depklite_unpack(const std::vector<unsigned char> compData, std::vector<unsi
 	getNextBitData.getNextByteDat.compressedStart = compressedStart;
 
 	// Buffer for the decompressed data (also little endian).
-    decdata.assign(fileSize*10, 0);
+    decdata.assign(fileSize * decompMaxSize, 0);
 
 	// Current position for inserting decompressed data.
     unsigned char *decompPtr = decdata.data();
@@ -360,6 +373,23 @@ bool depklite_unpack(const std::vector<unsigned char> compData, std::vector<unsi
 			// Finally, duplicate the decompressed data using the calculated offset and size.
 			// Note that memcpy or even memmove is NOT the right way,
 			// since overlaps are possible
+
+			// Guard: the back-reference must not point before the start of the
+			// decompression buffer (pointer underflow / out-of-bounds read).
+			if (offset == 0 || static_cast<ptrdiff_t>(offset) > (decompPtr - decompBuffStart))
+			{
+				gLogging << "depklite - Invalid back-reference offset; aborting decompression\n";
+				delete [] compressedStart;
+				return false;
+			}
+			// Guard: the destination must not exceed the allocated buffer.
+			const size_t decompBufSize = decdata.size();
+			if (static_cast<size_t>(decompPtr - decompBuffStart) + copyCount > decompBufSize)
+			{
+				gLogging << "depklite - Decompressed data exceeds buffer; aborting\n";
+				delete [] compressedStart;
+				return false;
+			}
 			unsigned char *duplicateBegin = decompPtr - offset;
 			unsigned char *duplicateEnd = duplicateBegin + copyCount;
 			for (unsigned char *p = duplicateBegin; p < duplicateEnd; ++p, ++decompPtr)
@@ -371,6 +401,12 @@ bool depklite_unpack(const std::vector<unsigned char> compData, std::vector<unsi
 		{
 			// Usage of "Decryption" mode isn't required for Keen Dreams v1.00
 			// Get next byte and then append it onto the decompressed data.
+			if (static_cast<size_t>(decompPtr - decompBuffStart) >= decdata.size())
+			{
+				gLogging << "depklite - Decompressed literal exceeds buffer; aborting\n";
+				delete [] compressedStart;
+				return false;
+			}
 			*decompPtr++ = getNextByte(&getNextBitData.getNextByteDat);
 		}
 	}

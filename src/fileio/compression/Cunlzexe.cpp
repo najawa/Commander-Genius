@@ -334,6 +334,12 @@ int Cunlzexe::unpack(BYTE *p_input, std::vector<BYTE> &outdata)
         }
         if(getbit(&bits, inpos))
         {
+            // Guard: do not overrun the sliding window buffer.
+            if (p >= data + sizeof(data))
+            {
+                gLogging << "Cunlzexe: sliding window overflow in unpack(); aborting\n";
+                return FAILURE;
+            }
         	*p++=p_input[inpos];
         	inpos++;
             continue;
@@ -369,7 +375,22 @@ int Cunlzexe::unpack(BYTE *p_input, std::vector<BYTE> &outdata)
         }
         for( ;len>0;len--,p++)
         {
-            *p=*(p+span);
+            // Guard: do not overrun the sliding window buffer.
+            if (p >= data + sizeof(data))
+            {
+                gLogging << "Cunlzexe: sliding window overflow during copy; aborting\n";
+                return FAILURE;
+            }
+            // Guard against out-of-bounds reads: span is a negative offset into
+            // the sliding window buffer. Reject references that point before the
+            // start of data[] or past the current write position.
+            unsigned char *src = p + span;
+            if (src < data || src >= p)
+            {
+                gLogging << "Cunlzexe: invalid back-reference in unpack(); aborting\n";
+                return FAILURE;
+            }
+            *p = *src;
         }
     }
     if(p!=data)

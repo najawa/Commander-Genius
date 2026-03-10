@@ -154,8 +154,8 @@ std::string CGUINumberControl::sliderStr()
     std::string slider;
     slider = static_cast<char>(ch);
 
-    const int sVal = (SLIDER_WIDTH-3)*(mValue - mStartValue) /
-                                      (mEndValue - mStartValue);
+    const int range = mEndValue - mStartValue;
+    const int sVal = (range != 0) ? (SLIDER_WIDTH-3)*(mValue - mStartValue) / range : 0;
 
     for( int l=0 ; l<sVal ; l++)
         slider += '\04';

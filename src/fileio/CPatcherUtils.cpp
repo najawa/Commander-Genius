@@ -12,7 +12,9 @@
 #include <base/interface/FindFile.h>
 #include <base/GsLogging.h>
 #include <cstring>
+#include <cstdlib>
 #include <fstream>
+#include <stdexcept>
 
 /**
  * \brief   given a text line(string) with various items to patch, it will read of those
@@ -141,14 +143,29 @@ bool CPatcher::readIntValueAndWidth(const std::string &input, unsigned long int 
 
 
 		// now everything is hexadecimal with the proper format
-		sscanf( line.c_str(), "%lx", &output );
+		{
+			char *endptr = nullptr;
+			output = std::strtoul(line.c_str(), &endptr, 16);
+			if(endptr == line.c_str())
+			{
+				output = 0;
+				return false;
+			}
+		}
 
 		return true;
 	}
 
 	// Try to read a decimal number
-	if( (output = atoi(input)) != 0)
-		return true;
+	{
+		char *endptr = nullptr;
+		const long val = std::strtol(input.c_str(), &endptr, 10);
+		if(endptr != input.c_str() && val != 0)
+		{
+			output = static_cast<unsigned long int>(val);
+			return true;
+		}
+	}
 
 	if(input == "00" || input == "0")
     {

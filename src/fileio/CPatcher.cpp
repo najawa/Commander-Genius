@@ -10,6 +10,7 @@
 #include <string.h>
 #include <fstream>
 #include <iostream>
+#include <stdexcept>
 
 #include <base/interface/FindFile.h>
 #include <base/GsLogging.h>
@@ -18,6 +19,21 @@
 #include "fileio/ResourceMgmt.h"
 #include "fileio/KeenFiles.h"
 #include "engine/core/CBehaviorEngine.h"
+
+// Returns true if resolvedPath stays within baseDir (prevents path traversal).
+static bool isPathWithinBase(const std::string &baseDir, const std::string &resolvedPath)
+{
+    if (resolvedPath.empty() || baseDir.empty())
+        return false;
+
+    // Ensure the canonical resolved path begins with the canonical base dir.
+    std::string base = GetAbsolutePath(baseDir);
+    // Guarantee a trailing separator so "basefoo" doesn't match "base".
+    if (!base.empty() && base.back() != '/' && base.back() != '\\')
+        base += '/';
+
+    return resolvedPath.substr(0, base.size()) == base;
+}
 
 
 CPatcher::CPatcher(CExeFile &ExeFile, const std::string &patchFname) :
@@ -70,7 +86,9 @@ void CPatcher::process()
 
 			if(strCaseStartsWith(extText,"ck"))
 			{
-				if(atoi(extText.substr(2)) != m_episode)
+				int patchEp = 0;
+				try { patchEp = std::stoi(extText.substr(2)); } catch(const std::exception&) { patchEp = -1; }
+				if(patchEp != m_episode)
 				{
 					gLogging.textOut("Error! The patch-file does not match the opened episode!!!<br>");
 					return;
@@ -95,6 +113,15 @@ void CPatcher::process()
                 const std::string dataDir = gKeenFiles.gameDir;
 
                 const std::string filepath = JoinPaths(dataDir, patch_file_name);
+
+                // Guard against path traversal: the resolved path must stay
+                // inside the game directory.
+                const std::string resolvedPath = GetAbsolutePath(filepath);
+                if (!isPathWithinBase(dataDir, resolvedPath))
+                {
+                    gLogging.textOut("Security: patchfile path traversal blocked: \"" + patch_file_name + "\"<br>");
+                    break;
+                }
 
                 patchMemfromFile(filepath, offset);
 			}
@@ -165,6 +192,12 @@ void CPatcher::process()
 					if(readIntValueAndWidth(textline, number, width))
 					{
 						// In this case we have a number
+						if(width < 0 || static_cast<long unsigned int>(width) > sizeof(number) ||
+						   offset + static_cast<long unsigned int>(width) > m_datasize)
+						{
+							gLogging.textOut("Patch addresses exceed the file size<br>");
+							break;
+						}
 						memcpy(m_data+offset, &number, width);
 						offset+=width;
 					}
@@ -312,12 +345,26 @@ bool CPatcher::patchMemfromFile(const std::string& patch_file_name, long offset)
         return false;
 	}
 
+    // Validate that the offset is within bounds before any write.
+    if (offset < 0 || static_cast<size_t>(offset) >= m_datasize)
+    {
+        gLogging.textOut("Patch offset is out of bounds<br>");
+        return false;
+    }
+
 	buf_to_patch = m_data + offset;
 
 	long counter = 0;
     while(!patchfile.eof())
 	{
         byte = (unsigned char) patchfile.get();
+        if(patchfile.fail()) break; // eof sets failbit on last get()
+        // Prevent writing beyond the end of the exe buffer.
+        if(static_cast<size_t>(offset + counter) >= m_datasize)
+        {
+            gLogging.textOut("Patch file data exceeds exe buffer — truncating<br>");
+            break;
+        }
 		memcpy(buf_to_patch+counter,&byte,1); // one byte every time ;-)
 		counter++;
 	}

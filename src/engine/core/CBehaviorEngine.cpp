@@ -44,7 +44,7 @@ bool CBehaviorEngine::readTeleporterTable(gs_byte *p_exedata)
 		// We can have 6 teleporters cases: dest 1, 2, 3 and snow and dirt in that combination
 		for(int i=0 ; i<6 ; i++)
 		{
-			stTeleporterTable teleport;
+			stTeleporterTable teleport{};
 			teleport.objectnumber1 = 0x21 + i;
 			m_TeleporterTable.push_back(teleport);
 		}

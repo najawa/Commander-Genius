@@ -20,6 +20,7 @@
 #include <cstring>
 #include <iostream>
 #include <fstream>
+#include <vector>
 
 
 CExeFile::CExeFile()
@@ -522,7 +523,16 @@ bool CExeFile::unpackAudioInterval( RingBuffer<IMFChunkType> &imfData,
         uint32_t emb_file_data_size;
         memcpy( &emb_file_data_size, &AudioCompFileData[audio_start], sizeof(uint32_t) );
 
-        gs_byte imfDataPrim[emb_file_data_size];
+        // Guard against unreasonable decompressed sizes (max 16 MB)
+        constexpr uint32_t MAX_AUDIO_SIZE = 16 * 1024 * 1024;
+        if(emb_file_data_size > MAX_AUDIO_SIZE)
+        {
+            gLogging.ftextOut("Audio data size %u exceeds maximum %u", emb_file_data_size, MAX_AUDIO_SIZE);
+            return false;
+        }
+
+        std::vector<gs_byte> imfDataVec(emb_file_data_size);
+        gs_byte *imfDataPrim = imfDataVec.data();
         gs_byte *imfDataPtr = imfDataPrim;
 
 

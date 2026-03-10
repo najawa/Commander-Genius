@@ -13,6 +13,7 @@
 #include "engine/core/CBehaviorEngine.h"
 
 #include <ctime>
+#include <stdexcept>
 #include <base/interface/property_tree/property_tree.h>
 #include <base/interface/property_tree/xml_parser.h>
 
@@ -52,7 +53,12 @@ Uint32 CSaveGameController::getDataSize(std::ifstream &StateFile)
     Uint32 size=0;
     for(Uint32 i=0 ; i<sizeof(Uint32) ; i++)
     {
-        size += StateFile.get() << (i*8);
+        // StateFile.get() returns int; a value of EOF (-1) must be rejected
+        // before shifting into a Uint32 to prevent wrapping to a huge size.
+        const int byte = StateFile.get();
+        if(byte == std::char_traits<char>::eof())
+            return 0;
+        size += static_cast<Uint32>(byte) << (i*8);
     }
     return size;
 }
@@ -135,7 +141,8 @@ bool CSaveGameController::readSlotList(std::vector<std::string> &list)
     {
         std::string buf = filename.substr(filename.size()-1);
 
-        const int foundEp = atoi(buf.c_str());
+        int foundEp = 0;
+        try { foundEp = std::stoi(buf); } catch(const std::exception&) { continue; }
 
         // Check if the file fits to this episode
         if(foundEp == m_Episode)
@@ -259,7 +266,7 @@ Uint32 CSaveGameController::getSlotNumber(const std::string &filename)
         return -2;
     }
 
-    return atoi(buf.c_str());
+    try { return std::stoi(buf); } catch(const std::exception&) { return -1; }
 }
 
 std::string CSaveGameController::getExtension(const std::string &filename)
@@ -289,12 +296,21 @@ std::string CSaveGameController::getSlotName(const std::string &filename)
     }
     else
     {
-        // read the slot name
-        Uint32 size = StateFile.get();
-        std::vector<char> buf(size + 1);
-        readData( &buf[0], size, StateFile);
-        buf[size] = '\0';
-        SlotName = &buf[0];
+        // read the slot name — one byte encodes the length (0–255).
+        // Reject EOF early so the cast to Uint32 cannot wrap to a huge value.
+        const int rawSize = StateFile.get();
+        if(rawSize == std::char_traits<char>::eof())
+        {
+            SlotName = "- Read Error -";
+        }
+        else
+        {
+            const Uint32 size = static_cast<Uint32>(rawSize);
+            std::vector<char> buf(size + 1);
+            readData( &buf[0], size, StateFile);
+            buf[size] = '\0';
+            SlotName = &buf[0];
+        }
     }
 
     StateFile.close();
@@ -419,7 +435,15 @@ bool CSaveGameController::load()
         m_datablock.push_back(StateFile.get());
     }
 
-    // TODO: Decompression has still to be done!
+    // TODO: Decompression is not yet implemented.
+    // The functions sgrle_initdecompression(), sgrle_decompressV1(), and
+    // sgrle_decompressV2() are declared at the top of this file but never
+    // called.  Until decompression is wired in, save files written with
+    // compression (if sgrle_compress is ever enabled in save()) will be
+    // loaded back as raw compressed bytes and will produce corrupt game state.
+    // Required work: call sgrle_initdecompression() once, then dispatch to
+    // sgrle_decompressV1/V2 based on the save-file version byte before the
+    // data is transferred into m_datablock.
 
     // Now write all the data to the file
     StateFile.close();
@@ -464,11 +488,21 @@ bool CSaveGameController::save()
 
     // Convert everything to a primitive data structure
     // First pass the header, which is only version,
-    // sizeofname and name of slot itself
+    // sizeofname and name of slot itself.
+    //
+    // The slot name length is stored as a single byte (max 255).  Truncate
+    // here so the stored length always matches the bytes actually written.
+    const size_t rawNameLen = m_statename.size();
+    if(rawNameLen > 255)
+    {
+        gLogging.textOut("Warning: save slot name exceeds 255 bytes and will be truncated.\n");
+    }
+    const size_t nameLen = (rawNameLen > 255) ? 255 : rawNameLen;
+
     Uint32 offset = 0;
     Uint32 size = sizeof(SAVEGAMEVERSION)
                 + sizeof(char)
-                + m_statename.size()*sizeof(char);
+                + nameLen * sizeof(char);
 
     size += m_datablock.size();
     // Headersize + Datablock size
@@ -476,9 +510,9 @@ bool CSaveGameController::save()
 
     // Write the header
     primitive_buffer[offset++] = SAVEGAMEVERSION;
-    primitive_buffer[offset++] = m_statename.size();
+    primitive_buffer[offset++] = static_cast<char>(nameLen);
 
-    for( Uint32 i=0; i<m_statename.size() ; i++ )
+    for( size_t i=0; i<nameLen ; i++ )
     {
         primitive_buffer[offset++] = m_statename[i];
     }
@@ -491,7 +525,11 @@ bool CSaveGameController::save()
         pos++;
     }
 
-    // TODO: Compression has still to be done!
+    // TODO: Compression is not yet implemented.
+    // sgrle_compress() is declared at the top of this file but never called.
+    // When enabled, the compressed output must be written instead of
+    // primitive_buffer, and the save-file version byte (or a separate flag)
+    // must signal to load() that decompression is required on the next read.
 
     // Now write all the data to the file
     StateFile.write( &primitive_buffer[0], size );

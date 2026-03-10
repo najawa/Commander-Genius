@@ -11,6 +11,7 @@
 #include "KeenFiles.h"
 #include <base/interface/FindFile.h>
 #include <base/GsLogging.h>
+#include <stdexcept>
 
 #include <base/GsLua.h>
 
@@ -24,7 +25,7 @@ int getRessourceID(const std::string& filename, const std::string& namefilter)
 
 	text.erase(text.find("."));
 
-	value = atoi(text.c_str());
+	try { value = std::stoi(text); } catch(const std::exception&) { value = 0; }
 	return value;
 }
 

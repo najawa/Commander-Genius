@@ -19,6 +19,7 @@ static void CarmackExpand(void *src, void *dest, int expLength)
 {
     uint16_t *srcptr = (uint16_t *)src;
     uint16_t *dstptr = (uint16_t *)dest;
+    uint16_t *dstEnd = dstptr + (expLength / WORDSIZE); // one-past-end sentinel
     uint16_t *runptr;
     uint16_t ch, count, offset;
     expLength /= WORDSIZE; // Number of words to deal with
@@ -44,6 +45,7 @@ static void CarmackExpand(void *src, void *dest, int expLength)
                 uint8_t *srcptr_8 = (uint8_t *)(srcptr) + 1;
                 memcpy(&srcptr, &srcptr_8, sizeof(uint8_t *));
 
+                if (dstptr >= dstEnd) break; // bounds guard
                 *(dstptr++) = ch;
                 expLength--;
             }
@@ -54,10 +56,16 @@ static void CarmackExpand(void *src, void *dest, int expLength)
                 uint8_t *srcptr_8 = (uint8_t *)(srcptr) + 1;
                 memcpy(&srcptr, &srcptr_8, sizeof(uint8_t *));
 
+                // Guard: back-reference must not point before dest.
+                if (offset > static_cast<ptrdiff_t>(dstptr - (uint16_t *)dest))
+                    break;
                 runptr = dstptr - offset;
                 expLength -= count;
                 while (count--)
+                {
+                    if (dstptr >= dstEnd) break; // bounds guard
                     *(dstptr++) = *(runptr++);
+                }
             }
         }
         else if (tag == CARMACK_FARTAG)
@@ -71,6 +79,7 @@ static void CarmackExpand(void *src, void *dest, int expLength)
                 uint8_t *srcptr_8 = (uint8_t *)(srcptr) + 1;
                 memcpy(&srcptr, &srcptr_8, sizeof(uint8_t *));
 
+                if (dstptr >= dstEnd) break; // bounds guard
                 *(dstptr++) = ch;
                 expLength--;
             }
@@ -78,14 +87,21 @@ static void CarmackExpand(void *src, void *dest, int expLength)
             {
                 offset = GETWORD(reinterpret_cast<gs_byte*>(srcptr));
                 srcptr++;
-                runptr = (uint16_t *)dest + offset;;
+                // Guard: absolute offset must point within already-written output.
+                if ((uint16_t *)dest + offset >= dstptr)
+                    break;
+                runptr = (uint16_t *)dest + offset;
                 expLength -= count;
                 while (count--)
+                {
+                    if (dstptr >= dstEnd) break; // bounds guard
                     *(dstptr++) = *(runptr++);
+                }
             }
         }
         else
         {
+            if (dstptr >= dstEnd) break; // bounds guard
             *(dstptr++) = ch;
             --expLength;
         }

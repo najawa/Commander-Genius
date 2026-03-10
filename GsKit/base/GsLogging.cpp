@@ -206,7 +206,7 @@ void CLogFile::ftextOut(const char *Text, ...)
 	va_list pArgList;
 	
 	va_start(pArgList, Text);
-    vsprintf(buffer.data(), Text, pArgList);
+    vsnprintf(buffer.data(), buffer.size(), Text, pArgList);
 	va_end(pArgList);
 	
     textOut(buffer.data());
@@ -218,7 +218,7 @@ void CLogFile::fltextOut(FONTCOLORS Color, bool List, const char *Text, ...)
 	va_list pArgList;
 	
 	va_start(pArgList, Text);
-    vsprintf(buffer.data(), Text, pArgList);
+    vsnprintf(buffer.data(), buffer.size(), Text, pArgList);
 	va_end(pArgList);
 	
     textOut(Color, List, buffer.data());
@@ -232,7 +232,7 @@ void CLogFile::ftextOut(FONTCOLORS Color, const char *Text, ...)
     buffer.fill(0);
 	va_list pArgList;
 	va_start(pArgList, Text);
-    vsprintf(buffer.data(), Text, pArgList);
+    vsnprintf(buffer.data(), buffer.size(), Text, pArgList);
     textOut(Color, buffer.data());
 	va_end(pArgList);
 }

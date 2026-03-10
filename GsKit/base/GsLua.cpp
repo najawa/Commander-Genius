@@ -48,8 +48,29 @@ bool GsLua::loadFile(const std::string &fname)
 
     mLuaStatePtr = (void*)L;
 
-    /* Load the standard Lua libraries. */
-    luaL_openlibs(L);    
+    // Load only safe Lua libraries — NO os, io, package, or debug
+    // These could allow arbitrary code execution via os.execute(),
+    // file system access via io.open(), or module loading via require()
+    static const luaL_Reg safeLibs[] = {
+        {"_G",        luaopen_base},
+        {LUA_TABLIBNAME,  luaopen_table},
+        {LUA_STRLIBNAME,  luaopen_string},
+        {LUA_MATHLIBNAME, luaopen_math},
+        {LUA_UTF8LIBNAME, luaopen_utf8},
+        {LUA_COLIBNAME,   luaopen_coroutine},
+        {nullptr, nullptr}
+    };
+    for (const luaL_Reg *lib = safeLibs; lib->func; lib++) {
+        luaL_requiref(L, lib->name, lib->func, 1);
+        lua_pop(L, 1);
+    }
+
+    // Remove dangerous functions from the base library
+    lua_pushnil(L); lua_setglobal(L, "dofile");
+    lua_pushnil(L); lua_setglobal(L, "loadfile");
+    lua_pushnil(L); lua_setglobal(L, "load");
+    lua_pushnil(L); lua_setglobal(L, "rawget");
+    lua_pushnil(L); lua_setglobal(L, "rawset");
 
     if (luaL_dofile(L, fullfname.c_str()))
     {
