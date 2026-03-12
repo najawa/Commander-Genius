@@ -125,8 +125,8 @@ else()
 
     add_subdirectory(base)
     if(USE_IMGUI)
-        add_subdirectory(imgui)
         ADD_DEFINITIONS(-DUSE_IMGUI)
+        add_subdirectory(imgui)
     endif()
 
 	if(IOS)

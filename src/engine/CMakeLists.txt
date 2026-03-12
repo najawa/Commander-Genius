@@ -99,6 +99,7 @@ set_property(TARGET createGameLauncherMenu APPEND PROPERTY SOURCES gameselector.
 add_dependencies(engine createGameLauncherMenu)
 
 target_include_directories(engine PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+target_include_directories(engine PRIVATE ${PROJECT_SOURCE_DIR})
 
 if(BUILD_KEEN)
     target_link_libraries(engine engine_keen_galaxy engine_keen_vorticon)
@@ -116,6 +117,10 @@ target_link_libraries(engine
                       cg_dialog
                       unzip
                       depklite)
+
+if(USE_IMGUI)
+    target_link_libraries(engine GsKit_imgui)
+endif()
 
 if(DOWNLOADER)
     TARGET_LINK_LIBRARIES(engine ${CURL_LIBRARIES})

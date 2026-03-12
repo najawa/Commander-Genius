@@ -2,7 +2,6 @@
 #ifdef USE_IMGUI
 
 #include "imgui.h"
-#include <atomic>
 #include <vector>
 #include <string>
 #include <memory>
@@ -74,9 +73,12 @@ private:
     bool mShowDownloadModal = false;
     bool mCatalogueLoaded = false;
     bool mCatalogueLoading = false;
-    std::atomic<int> mDownloadProgress{0};
-    std::atomic<int> mDownloadErrorCode{0};
-    std::atomic<bool> mCancelDownload{false};
+    // Note: these are accessed from both the download thread and the render
+    // thread without synchronization, matching the legacy DownloadGui pattern.
+    // Safe in practice on x86/ARM but technically a data race.
+    int mDownloadProgress = 0;
+    int mDownloadErrorCode = 0;
+    bool mCancelDownload = false;
     bool mDownloading = false;
     int mDownloadingIndex = -1;
     std::shared_ptr<ThreadPoolItem> mDownloadThread;

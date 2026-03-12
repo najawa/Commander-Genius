@@ -326,6 +326,11 @@ if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/GsKit/CMakeLists.txt")
     MESSAGE(FATAL_ERROR "You need to have the sources of GsKit in order to build Commander Genius. ")
 endif()
 
+# Propagate USE_IMGUI to engine targets (GsKit defines it directory-scoped)
+if(USE_IMGUI)
+    add_definitions(-DUSE_IMGUI)
+endif()
+
 # And build Commander Genius on top of that!
 add_subdirectory("src")
 

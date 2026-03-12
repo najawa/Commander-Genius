@@ -9,3 +9,7 @@ add_library(engine_keen STATIC KeenEngine.cpp
                                KeenEngine.h)
 
 target_link_libraries(engine_keen engine_core fileio)
+
+if(USE_IMGUI)
+    target_link_libraries(engine_keen GsKit_imgui)
+endif()

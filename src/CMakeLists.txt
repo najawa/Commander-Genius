@@ -52,6 +52,10 @@ endif()
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/GsKit)
 
+if(USE_IMGUI)
+    INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/GsKit/imgui)
+endif()
+
 # set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/CMake)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/GsKit/CMake)
 
@@ -154,6 +158,10 @@ target_link_libraries (CGeniusExe PUBLIC engine)
 
 # Link GsKit
 target_link_libraries (CGeniusExe PUBLIC GsKit)
+
+if(USE_IMGUI)
+    target_link_libraries(CGeniusExe PUBLIC GsKit_imgui)
+endif()
 
 # iOS-specific linking
 if(IOS)
