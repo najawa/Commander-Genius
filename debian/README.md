@@ -28,6 +28,9 @@ Of course you still have the option to use your old original DOS versions of the
 * (c) 2010-2023          Pelya (Android-Distro)
 * (c) 2020-2023          Elias Oenal (Switch port)
 
+### Design
+* (c) 2026               najawa
+
 ### Resources
 * (c) 2018-2023          Zilem
 
@@ -686,6 +689,7 @@ suggestions:
  
  
 ## Contributors:
+* najawa (UI/UX Design)
 * Sanic The Hedgehog
 * XRackProject
 * Passion4Pins
